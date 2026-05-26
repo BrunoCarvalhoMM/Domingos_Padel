@@ -1690,62 +1690,61 @@ document.addEventListener('DOMContentLoaded', recuperarProgresso);
         alternarVisibilidade('mexicano');
     };
     // ========================================================
-// CONFIGURAÇÃO DO CONFIG DO FIREBASE (SUBSTITUA COM OS SEUS DADOS)
+// CONFIGURAÇÃO DO CONFIG DO FIREBASE
 // ========================================================
 var firebaseConfig = {
-  apiKey: "AIzaSyD2FEd-2J_Fg-8oM6LQLrBrs6Xantqnzb8",
-  authDomain: "padel-domingos.firebaseapp.com",
-  databaseURL: "https://padel-domingos-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "padel-domingos",
-  storageBucket: "padel-domingos.firebasestorage.app",
-  messagingSenderId: "201955843161",
-  appId: "1:201955843161:web:867dd48a13766231c8e548"
+  apiKey: "A_SUA_API_KEY",
+  authDomain: "O_SEU_AUTH_DOMAIN",
+  databaseURL: "O_SEU_DATABASE_URL", // <--- CONFIRMA SE ESTA LINHA EXISTE E SE TEM O LINK!
+  projectId: "O_SEU_PROJECT_ID",
+  storageBucket: "O_SEU_STORAGE_BUCKET",
+  messagingSenderId: "O_SEU_SENDER_ID",
+  appId: "O_SEU_APP_ID"
 };
 
-// Inicializar o Firebase se ainda não estiver inicializado
+// Inicializar o Firebase de forma segura
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 var database = firebase.database();
 var padelRef = database.ref('dados_padel');
 
-// 1. Sobrepor a função de gravação antiga para gravar na Nuvem em tempo real
-var funcaoOriginalAtualizarLocal = atualizarLocal;
-atualizarLocal = function() {
-    // Mantém o salvamento local por segurança
-    if (typeof funcaoOriginalAtualizarLocal === 'function') {
-        funcaoOriginalAtualizarLocal();
-    }
-    // Envia os dados atualizados para o Firebase
-    padelRef.set(db).catch(function(error) {
-        console.error("Erro ao gravar no Firebase: ", error);
-    });
-};
+// 1. Substituir a função de gravação antiga
+if (typeof atualizarLocal === 'function') {
+    var funcaoOriginalAtualizarLocal = atualizarLocal;
+    atualizarLocal = function() {
+        if (typeof funcaoOriginalOriginalAtualizarLocal === 'function') {
+            funcaoOriginalOriginalAtualizarLocal();
+        }
+        // Envia para a nuvem
+        padelRef.set(db).catch(function(error) {
+            console.error("Erro ao gravar no Firebase: ", error);
+        });
+    };
+}
 
-// 2. Ouvinte em Tempo Real: deteta mudanças online e atualiza o ecrã de toda a gente
-var primeiraCarga = true;
+// 2. Ouvir a Nuvem em tempo real (CORRIGIDO: Atualiza logo ao abrir a página)
 padelRef.on('value', function(snapshot) {
     var dadosOnline = snapshot.val();
     if (dadosOnline) {
         db = dadosOnline;
         
-        // Se não for a primeira carga (ou seja, se alguém atualizou um jogo agora)
-        // força a atualização visual de todas as tabelas e rankings no ecrã
-        if (!primeiraCarga) {
+        // Dá uma fração de segundo para garantir que a página carregou e força o redesenho de tudo
+        setTimeout(function() {
             if (typeof renderizarTudoRk === 'function') renderizarTudoRk();
             if (typeof renderizarTudoMex === 'function') renderizarTudoMex();
             if (typeof renderizarEscada === 'function') renderizarEscada();
             if (typeof renderizarLiga === 'function') renderizarLiga();
-        }
-        primeiraCarga = false;
+            if (typeof carregarLista === 'function') carregarLista();
+        }, 200);
     } else {
-        // Se a base de dados online estiver totalmente vazia (primeira vez que usa)
-        // envia automaticamente os dados que já tinha guardados no seu telemóvel
-        if (primeiraCarga && db) {
+        // Se a nuvem estiver vazia, envia os dados atuais para lá
+        if (db && (db.listaAtletas || db.historico)) {
             padelRef.set(db);
-            primeiraCarga = false;
         }
     }
+}, function(error) {
+    console.error("Erro de leitura do Firebase: ", error);
 });
 </script>
 </body>
