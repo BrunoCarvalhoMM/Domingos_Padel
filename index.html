@@ -578,11 +578,16 @@
         if(torneioC_fase === "GRUPOS") {
             if(torneioC_rAtual <= 3) {
                 document.getElementById('c-titulo-fase').innerText = "Fase de Grupos - Ronda " + torneioC_rAtual;
+                
+                // CRIAÇÃO DE ORDENS FIXAS PARA GERAR OS JOGOS SEM REPETIÇÕES
+                const fixoA = [...torneioC_duplas.filter(d=>d.grupo==='A')].sort((a,b) => a.id - b.id);
+                const fixoB = [...torneioC_duplas.filter(d=>d.grupo==='B')].sort((a,b) => a.id - b.id);
+                
                 const jr = [[[0,1],[2,3]], [[0,2],[1,3]], [[0,3],[1,2]]][torneioC_rAtual-1];
-                torneioC_addCampo(grid, "Campo 1 (Gr.A)", classA[jr[0][0]], classA[jr[0][1]], 0, "bg-champions");
-                torneioC_addCampo(grid, "Campo 2 (Gr.B)", classB[jr[0][0]], classB[jr[0][1]], 1, "bg-europa");
-                torneioC_addCampo(grid, "Campo 3 (Gr.A)", classA[jr[1][0]], classA[jr[1][1]], 2, "bg-champions");
-                torneioC_addCampo(grid, "Campo 4 (Gr.B)", classB[jr[1][0]], classB[jr[1][1]], 3, "bg-europa");
+                torneioC_addCampo(grid, "Campo 1 (Gr.A)", fixoA[jr[0][0]], fixoA[jr[0][1]], 0, "bg-champions");
+                torneioC_addCampo(grid, "Campo 2 (Gr.B)", fixoB[jr[0][0]], fixoB[jr[0][1]], 1, "bg-europa");
+                torneioC_addCampo(grid, "Campo 3 (Gr.A)", fixoA[jr[1][0]], fixoA[jr[1][1]], 2, "bg-champions");
+                torneioC_addCampo(grid, "Campo 4 (Gr.B)", fixoB[jr[1][0]], fixoB[jr[1][1]], 3, "bg-europa");
             } else { torneioC_fase = "MEIAS"; torneioC_atualizarInterface(); }
         } 
         else if(torneioC_fase === "MEIAS") {
