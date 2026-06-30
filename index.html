@@ -1718,8 +1718,8 @@ var padelRef = database.ref('dados_padel');
 if (typeof atualizarLocal === 'function') {
     var funcaoOriginalAtualizarLocal = atualizarLocal;
     atualizarLocal = function() {
-        if (typeof funcaoOriginalOriginalAtualizarLocal === 'function') {
-            funcaoOriginalOriginalAtualizarLocal();
+        if (typeof funcaolOriginalAtualizarLocal === 'function') {
+            funcaoOriginalAtualizarLocal();
         }
         // Envia para a nuvem
         padelRef.set(db).catch(function(error) {
