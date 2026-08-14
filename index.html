@@ -2,6 +2,8 @@
 <html lang="pt-pt">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#1e293b">
     <title>Padel Domingos - Gestão Integrada</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
@@ -20,6 +22,9 @@
         .btn-menu.ativo { background: #4ade80; color: #1e293b; box-shadow: 0 0 10px rgba(74, 222, 128, 0.5); }
 
         .escondido { display: none !important; }
+        .estado-sync { margin-top: 12px; font-size: 0.72em; color: #94a3b8; letter-spacing: .02em; }
+        .estado-sync.ok { color: #4ade80; }
+        .estado-sync.off { color: #fbbf24; }
         .card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 15px; }
 
         /* Estilos do Torneio Mexicano */
@@ -89,163 +94,30 @@
         #modulo-torneiob .tabela-ranking td { padding: 12px; border: 1px solid #ddd; }
         #modulo-torneiob .btn-pdf { background-color: #d9534f; width: 100%; margin-top: 20px; padding: 15px; font-size: 1.1em; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; border: none; display: block; text-align: center; }
         #modulo-torneiob .btn-add { background: #6f42c1; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+
+        /* ================================================================= */
+        /* RESPONSIVO (telemóvel)                                            */
+        /* ================================================================= */
+        @media (max-width: 700px) {
+            body { padding: 6px; }
+            .menu-principal { padding: 12px 8px; }
+            .menu-principal h1 { font-size: 1.3em; }
+            .btn-menu { padding: 8px 14px; font-size: 13px; }
+            .grupo-botoes-menu { gap: 8px; }
+            .card { padding: 10px; }
+            .seccao-apoio { grid-template-columns: 1fr; }
+            .config-semana { flex-direction: column; gap: 10px; }
+            .novo-atleta-form { flex-direction: column; align-items: stretch; }
+            .novo-atleta-form input, .novo-atleta-form button { width: 100%; box-sizing: border-box; }
+            .confronto-row { grid-template-columns: 1fr 50px 22px 50px 1fr; gap: 4px; }
+            .jogador-linha { font-size: 0.75em; }
+            #torneio-c-root .tabelas-grupos { grid-template-columns: 1fr; }
+            #torneio-c-root .grid-campos { grid-template-columns: 1fr; }
+            #torneio-c-root .box-fixas { flex-direction: column; align-items: stretch; }
+            #torneio-c-root .card { padding: 12px; }
+        }
     </style>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-</head>
-<body>
-
-<div class="container-geral">
-
-    <div class="menu-principal">
-        <h1>🎾 Domingos de Padel 🎾</h1>
-        <div class="grupo-botoes-menu">
-          <button id="btn-nav-mexicano" class="btn-menu ativo" onclick="alternarVisibilidade('mexicano')">
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="14" viewBox="0 0 30 17.1" style="vertical-align: middle; margin-right: 6px; border-radius: 2px;">
-    <rect width="10" height="17.1" fill="#006847"/>
-    <rect x="10" width="10" height="17.1" fill="#FFFFFF"/>
-    <rect x="20" width="10" height="17.1" fill="#CE1126"/>
-  </svg>
-  Torneio Mexicano
-</button>
-           <button id="btn-nav-torneiob" class="btn-menu" onclick="alternarVisibilidade('torneiob')">
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
-    <path d="M18 3v18M6 3v18M6 7h12M6 12h12M6 17h12"/>
-  </svg>
-  Torneio Escada
-</button>
-            <button id="btn-nav-torneioc" class="btn-menu" onclick="alternarVisibilidade('torneioc')">🏆Torneio Liga</button>
-            <button id="btn-nav-ranking" class="btn-menu" onclick="alternarVisibilidade('ranking')">
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 6px;">
-    <!-- 2º Lugar -->
-    <rect x="2" y="10" width="6" height="11" rx="1" />
-    <!-- 1º Lugar -->
-    <rect x="9" y="5" width="6" height="16" rx="1" />
-    <!-- 3º Lugar -->
-    <rect x="16" y="13" width="6" height="8" rx="1" />
-  </svg>
-  Ranking Geral
-</button>
-
-
-    <div id="modulo-mexicano">
-        <div class="card">
-            <h2 style="color: #1a3a5a; text-align: center; margin-top: 0;">TORNEIO MEXICANO</h2>
-            <div id="seccao-selecao" class="card" style="box-shadow: none; background: #fafafa;">
-                <h2>Inscrição de Atletas</h2>
-                <div class="novo-atleta-form">
-                    <div><label>Nome:</label><input type="text" id="novo-nome" placeholder="Nome"></div>
-                    <div><label>Nascimento:</label><input type="date" id="nova-data"></div>
-                    <button class="btn-add-mex" onclick="adicionarAtletaMex()">+ Adicionar</button>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <span class="contador" id="txt-contador">Selecionados: 0 / 16</span>
-                    <button class="btn-acao" id="btn-confirmar" onclick="prepararTorneio()" disabled>Confirmar e Iniciar</button>
-                </div>
-                <table class="tabela-selecao"><tbody id="lista-inscritos"></tbody></table>
-            </div>
-
-            <div id="seccao-torneio" class="escondido">
-                <div class="card" style="box-shadow: none;">
-                    <h2 style="font-size: 1.1em; margin-bottom: 15px;">Classificação Geral</h2>
-                    <div style="overflow-x: auto;">
-                        <table class="torneio" id="tabela-classificacao-geral">
-                            <thead>
-                                <tr>
-                                    <th>Pos</th><th style="text-align:left">Jogador</th>
-                                    <th>R1</th><th>R2</th><th>R3</th><th>R4</th><th>R5</th><th>R6</th><th>R7</th><th>R8</th><th>R9</th>
-                                    <th class="destaque-total">Tot</th>
-                                </tr>
-                            </thead>
-                            <tbody id="corpo-classificacao"></tbody>
-                        </table>
-                    </div>
-                    <button id="btn-finalizar" class="btn-acao btn-pdf" onclick="gerarPDFMex()">Gerar PDF & Enviar para o Ranking</button>
-                </div>
-
-                <div id="area-jogo" class="card" style="box-shadow: none; border-top: 1px solid #ddd;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
-                        <button id="btn-voltar" class="btn-voltar escondido" onclick="voltarRonda()">← Corrigir Anterior</button>
-                        <h2 id="titulo-ronda" style="margin: 0; font-size: 1.2em;">Ronda 1</h2>
-                        <div style="width: 100px;"></div>
-                    </div>
-                    <div id="grid-campos" class="grid-campos"></div>
-                    <button id="btn-gravar-ronda" class="btn-acao" style="float:none; width:100%; margin-top:20px; padding:15px; font-size:1.1em;" onclick="processarRonda()">Gravar Resultados da Ronda</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="modulo-torneiob" class="escondido">
-        <div class="card">
-            <h2 style="color: #4b2c82; text-align: center; font-size: 1.6em; margin-top: 0;">TORNEIO ESCADA</h2>
-            
-            <div id="esc-passo-1" class="card" style="box-shadow: none; background: #fafafa;">
-                <h2>1. Selecionar 16 Jogadores</h2>
-                <div class="novo-atleta-form">
-                    <div><label>Nome:</label><input type="text" id="esc-novo-nome" placeholder="Nome"></div>
-                    <div><label>Nascimento:</label><input type="date" id="esc-nova-data"></div>
-                    <button class="btn-add" onclick="adicionarAtletaEsc()">+ Adicionar</button>
-                </div>
-                <div style="overflow: hidden; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
-                    <span class="contador" id="esc-txt-contador">Selecionados: 0 / 16</span>
-                    <button class="btn-acao" id="esc-btn-ir-duplas" onclick="abrirConfigDuplasEsc()" disabled>Avançar</button>
-                </div>
-                <table class="tabela-selecao"><tbody id="esc-lista-atlet"></tbody></table>
-            </div>
-
-            <div id="esc-passo-duplas-fixas" class="card escondido" style="box-shadow: none;">
-                <h2>2. Duplas Fixas</h2>
-                <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
-                        <select id="esc-select-fixo-1" style="flex: 1; min-width: 150px;"></select>
-                        <select id="esc-select-fixo-2" style="flex: 1; min-width: 150px;"></select>
-                        <button class="btn-add" style="background:#28a745" onclick="adicionarDuplaFixaEsc()">+ Fixar</button>
-                    </div>
-                    <div id="esc-lista-duplas-fixas"></div>
-                </div>
-                <button class="btn-acao" onclick="gerarSorteioRonda1Esc()">Sortear Ronda 1</button>
-            </div>
-
-            <div id="esc-passo-torneio" class="card escondido" style="box-shadow: none;">
-                <h2 style="color: #4b2c82;">Ronda 1 (Informação)</h2>
-                <div class="grid-rondas" id="esc-grid-ronda-1"></div>
-
-                <hr style="margin: 30px 0;">
-
-                <h2 style="color: #28a745;">Ronda FINAL (Resultados)</h2>
-                <div class="grid-rondas" id="esc-grid-ronda-final"></div>
-                <button class="btn-acao" style="margin-top:20px; float:none; width:100%; padding:12px;" onclick="finalizarTorneioEsc()">Finalizar Torneio</button>
-            </div>
-
-            <div id="esc-passo-4" class="card escondido" style="box-shadow: none;">
-                <div class="quadro-honra">
-                    <div class="trofeu-card campeao-card">
-                        <h3>🏆 Campeões</h3>
-                        <p id="esc-nome-campeao">-</p>
-                    </div>
-                    <div class="trofeu-card candido-card">
-                        <h3>🍽️ Taça Cândido</h3>
-                        <p id="esc-nome-candido">-</p>
-                    </div>
-                </div>
-
-                <h2>Classificação Geral</h2>
-                <table class="tabela-ranking">
-                    <thead><tr><th>Lugar</th><th>Dupla</th><th>Pontos</th></tr></thead>
-                    <tbody id="esc-corpo-ranking"></tbody>
-                </table>
-                
-                <button class="btn-pdf" onclick="gerarPDFEsc()">Exportar Relatório PDF & Enviar para o Ranking</button>
-                <button class="btn-acao" style="background:#6c757d; margin-top:20px; float:none; width:100%;" onclick="reiniciarTorneioEsc()">Novo Torneio</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modulo-torneioc" class="escondido">
-        <div class="card">
-            <h2></h2>
-            <style>
+    <style>
     #torneio-c-root { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 10px; color: #333; }
     #torneio-c-root .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
     #torneio-c-root h1, #torneio-c-root h2 { color: #1a3a5a; text-align: center; margin-top: 0; }
@@ -304,6 +176,172 @@
     #torneio-c-root .legenda-desempate { font-size: 0.85em; color: #666; margin-top: 10px; text-align: center; font-style: italic; font-weight: bold; }
     #torneio-c-root .btn-reset { background-color: #343a40; margin-top: 50px; font-size: 0.8em; opacity: 0.6; }
 </style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+</head>
+<body>
+
+<div class="container-geral">
+
+    <div class="menu-principal">
+        <h1>🎾 Domingos de Padel 🎾</h1>
+        <div class="grupo-botoes-menu">
+          <button id="btn-nav-mexicano" class="btn-menu ativo" onclick="alternarVisibilidade('mexicano')">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="14" viewBox="0 0 30 17.1" style="vertical-align: middle; margin-right: 6px; border-radius: 2px;">
+    <rect width="10" height="17.1" fill="#006847"/>
+    <rect x="10" width="10" height="17.1" fill="#FFFFFF"/>
+    <rect x="20" width="10" height="17.1" fill="#CE1126"/>
+  </svg>
+  Torneio Mexicano
+</button>
+           <button id="btn-nav-torneiob" class="btn-menu" onclick="alternarVisibilidade('torneiob')">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+    <path d="M18 3v18M6 3v18M6 7h12M6 12h12M6 17h12"/>
+  </svg>
+  Torneio Escada
+</button>
+            <button id="btn-nav-torneioc" class="btn-menu" onclick="alternarVisibilidade('torneioc')">🏆Torneio Liga</button>
+            <button id="btn-nav-ranking" class="btn-menu" onclick="alternarVisibilidade('ranking')">
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle; margin-right: 6px;">
+    <!-- 2º Lugar -->
+    <rect x="2" y="10" width="6" height="11" rx="1" />
+    <!-- 1º Lugar -->
+    <rect x="9" y="5" width="6" height="16" rx="1" />
+    <!-- 3º Lugar -->
+    <rect x="16" y="13" width="6" height="8" rx="1" />
+  </svg>
+  Ranking Geral
+</button>
+        </div>
+        <div id="estado-sync" class="estado-sync">Sincronização: a ligar…</div>
+    </div>
+
+    <div id="modulo-mexicano">
+        <div class="card">
+            <h2 style="color: #1a3a5a; text-align: center; margin-top: 0;">TORNEIO MEXICANO</h2>
+            <div id="seccao-selecao" class="card" style="box-shadow: none; background: #fafafa;">
+                <h2>Inscrição de Atletas</h2>
+                <div class="novo-atleta-form">
+                    <div><label>Nome:</label><input type="text" id="novo-nome" placeholder="Nome"></div>
+                    <div><label>Nascimento:</label><input type="date" id="nova-data"></div>
+                    <button class="btn-add-mex" onclick="adicionarAtletaMex()">+ Adicionar</button>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <span class="contador" id="txt-contador">Selecionados: 0 / 16</span>
+                    <button class="btn-acao" id="btn-confirmar" onclick="prepararTorneio()" disabled>Confirmar e Iniciar</button>
+                </div>
+                <table class="tabela-selecao"><tbody id="lista-inscritos"></tbody></table>
+            </div>
+
+            <div id="seccao-torneio" class="escondido">
+                <div class="card" style="box-shadow: none;">
+                    <h2 style="font-size: 1.1em; margin-bottom: 15px;">Classificação Geral</h2>
+                    <div style="overflow-x: auto;">
+                        <table class="torneio" id="tabela-classificacao-geral">
+                            <thead>
+                                <tr>
+                                    <th>Pos</th><th style="text-align:left">Jogador</th>
+                                    <th>R1</th><th>R2</th><th>R3</th><th>R4</th><th>R5</th><th>R6</th><th>R7</th><th>R8</th><th>R9</th>
+                                    <th class="destaque-total">Tot</th>
+                                </tr>
+                            </thead>
+                            <tbody id="corpo-classificacao"></tbody>
+                        </table>
+                    </div>
+                    <button id="btn-finalizar" class="btn-acao btn-pdf" onclick="gerarPDFMex()">Gerar PDF & Enviar para o Ranking</button>
+                </div>
+
+                <div id="area-jogo" class="card" style="box-shadow: none; border-top: 1px solid #ddd;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #eee;">
+                        <button id="btn-voltar" class="btn-voltar escondido" onclick="voltarRonda()">← Corrigir Anterior</button>
+                        <h2 id="titulo-ronda" style="margin: 0; font-size: 1.2em;">Ronda 1</h2>
+                        <div style="width: 100px;"></div>
+                    </div>
+                    <div id="grid-campos" class="grid-campos"></div>
+                    <button id="btn-gravar-ronda" class="btn-acao" style="float:none; width:100%; margin-top:20px; padding:15px; font-size:1.1em;" onclick="processarRonda()">Gravar Resultados da Ronda</button>
+                    <div id="area-terminado" class="escondido" style="text-align:center; padding:20px 0;">
+                        <h2 style="color:#28a745; margin:0 0 8px 0;">Torneio Terminado!</h2>
+                        <p style="color:#555; margin:0 0 15px 0;">Use o botão acima para gerar o PDF e enviar as pontuações para o Ranking Geral.<br>Pode ainda corrigir a última ronda em «← Corrigir Anterior».</p>
+                        <button class="btn-acao" style="float:none; background:#6c757d;" onclick="novoTorneioMex()">Iniciar Novo Torneio</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modulo-torneiob" class="escondido">
+        <div class="card">
+            <h2 style="color: #4b2c82; text-align: center; font-size: 1.6em; margin-top: 0;">TORNEIO ESCADA</h2>
+            
+            <div id="esc-passo-1" class="card" style="box-shadow: none; background: #fafafa;">
+                <h2>1. Selecionar 16 Jogadores</h2>
+                <div class="novo-atleta-form">
+                    <div><label>Nome:</label><input type="text" id="esc-novo-nome" placeholder="Nome"></div>
+                    <div><label>Nascimento:</label><input type="date" id="esc-nova-data"></div>
+                    <button class="btn-add" onclick="adicionarAtletaEsc()">+ Adicionar</button>
+                </div>
+                <div style="overflow: hidden; padding: 10px 0; display: flex; justify-content: space-between; align-items: center;">
+                    <span class="contador" id="esc-txt-contador">Selecionados: 0 / 16</span>
+                    <button class="btn-acao" id="esc-btn-ir-duplas" onclick="abrirConfigDuplasEsc()" disabled>Avançar</button>
+                </div>
+                <table class="tabela-selecao"><tbody id="esc-lista-atlet"></tbody></table>
+            </div>
+
+            <div id="esc-passo-duplas-fixas" class="card escondido" style="box-shadow: none;">
+                <h2>2. Duplas Fixas</h2>
+                <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                        <select id="esc-select-fixo-1" style="flex: 1; min-width: 150px;"></select>
+                        <select id="esc-select-fixo-2" style="flex: 1; min-width: 150px;"></select>
+                        <button class="btn-add" style="background:#28a745" onclick="adicionarDuplaFixaEsc()">+ Fixar</button>
+                    </div>
+                    <div id="esc-lista-duplas-fixas"></div>
+                </div>
+                <div style="overflow:hidden;">
+                    <button class="btn-acao" onclick="gerarSorteioRonda1Esc()">Sortear Ronda 1</button>
+                    <button class="btn-acao" style="background:#6c757d; margin-right:10px;" onclick="voltarSelecaoEsc()">← Alterar Lista</button>
+                </div>
+            </div>
+
+            <div id="esc-passo-torneio" class="card escondido" style="box-shadow: none;">
+                <h2 style="color: #4b2c82;">Ronda 1 (Informação)</h2>
+                <div class="grid-rondas" id="esc-grid-ronda-1"></div>
+
+                <hr style="margin: 30px 0;">
+
+                <h2 style="color: #28a745;">Ronda FINAL (Resultados)</h2>
+                <div class="grid-rondas" id="esc-grid-ronda-final"></div>
+                <button class="btn-acao" style="margin-top:20px; float:none; width:100%; padding:12px;" onclick="finalizarTorneioEsc()">Finalizar Torneio</button>
+                <button class="btn-acao" style="background:#6c757d; margin-top:10px; float:none; width:100%;" onclick="reiniciarTorneioEsc()">Recomeçar Torneio</button>
+            </div>
+
+            <div id="esc-passo-4" class="card escondido" style="box-shadow: none;">
+                <div class="quadro-honra">
+                    <div class="trofeu-card campeao-card">
+                        <h3>🏆 Campeões</h3>
+                        <p id="esc-nome-campeao">-</p>
+                    </div>
+                    <div class="trofeu-card candido-card">
+                        <h3>🍽️ Taça Cândido</h3>
+                        <p id="esc-nome-candido">-</p>
+                    </div>
+                </div>
+
+                <h2>Classificação Geral</h2>
+                <table class="tabela-ranking">
+                    <thead><tr><th>Lugar</th><th>Dupla</th><th>Pontos</th></tr></thead>
+                    <tbody id="esc-corpo-ranking"></tbody>
+                </table>
+                
+                <button class="btn-pdf" onclick="gerarPDFEsc()">Exportar Relatório PDF & Enviar para o Ranking</button>
+                <button class="btn-acao" style="background:#6c757d; margin-top:20px; float:none; width:100%;" onclick="reiniciarTorneioEsc()">Novo Torneio</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modulo-torneioc" class="escondido">
+        <div class="card">
+
 
 <div id="torneio-c-root">
     <h1>Torneio Liga Campeões</h1>
@@ -388,27 +426,43 @@
 </div>
 
 <script>
+    // --- Helpers partilhados ---
+    function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function idAtleta(nome) { return String(nome).replace(/\s+/g, '_'); }
+    function pdfDisponivel() {
+        if (window.jspdf && window.jspdf.jsPDF) return true;
+        alert("A biblioteca de PDF não carregou. Verifique a ligação à Internet e recarregue a página.");
+        return false;
+    }
+    function sincronizarListasAtletas() {
+        if (typeof carregarLista === 'function') carregarLista();
+        if (typeof carregarListaEsc === 'function') carregarListaEsc();
+        if (typeof torneioC_carregarLista === 'function') torneioC_carregarLista();
+    }
+
     let torneioC_selecionados = []; let torneioC_duplasFixadas = []; let torneioC_duplas = []; let torneioC_rAtual = 1; let torneioC_fase = "GRUPOS";
     let torneioC_resultadosMeias = []; let torneioC_resultadosFinais = []; let torneioC_rankingDuplas = [];
 
     function torneioC_salvarEstado() {
         const dados = {
-            baseAtletas: baseDadosAtletas, selecionados: torneioC_selecionados, duplasFixadas: torneioC_duplasFixadas, 
+            selecionados: torneioC_selecionados, duplasFixadas: torneioC_duplasFixadas,
             duplas: torneioC_duplas, rAtual: torneioC_rAtual, fase: torneioC_fase,
             resultadosMeias: torneioC_resultadosMeias, resultadosFinais: torneioC_resultadosFinais, rankingDuplas: torneioC_rankingDuplas
         };
-        localStorage.setItem('padel_save_v13', JSON.stringify(dados));
+        try { localStorage.setItem('padel_save_v13', JSON.stringify(dados)); }
+        catch (e) { console.warn("Falha ao gravar o estado do Torneio Liga:", e); }
     }
 
     function torneioC_carregarEstado() {
-        const salvo = localStorage.getItem('padel_save_v13');
+        let salvo = null;
+        try { salvo = localStorage.getItem('padel_save_v13'); } catch (e) { console.warn(e); }
         if (salvo) {
-            const d = JSON.parse(salvo);
+            let d = {};
+            try { d = JSON.parse(salvo) || {}; } catch (e) { console.warn("Estado do Torneio Liga corrompido:", e); }
             const temTorneioIniciado = d.duplas && d.duplas.length > 0;
-            
+
             if (temTorneioIniciado) {
-                if (confirm("Existe um torneio a decorrer no Torneio C. Deseja continuar de onde parou?")) {
-                    if (d.baseAtletas) baseDadosAtletas = d.baseAtletas;
+                if (confirm("Existe um Torneio Liga a decorrer. Deseja continuar de onde parou?")) {
                     torneioC_selecionados = d.selecionados || [];
                     torneioC_duplasFixadas = d.duplasFixadas || [];
                     torneioC_duplas = d.duplas || [];
@@ -425,13 +479,12 @@
                     localStorage.removeItem('padel_save_v13');
                 }
             } else if (d.selecionados && d.selecionados.length > 0) {
-                if (d.baseAtletas) baseDadosAtletas = d.baseAtletas;
                 torneioC_selecionados = d.selecionados || [];
                 torneioC_duplasFixadas = d.duplasFixadas || [];
             }
         }
         
-        document.getElementById('c-txt-contador').innerText = `Selecionados: ${torneioC_selecionados.length} / 16`;
+        document.getElementById('c-txt-contador').textContent = `Selecionados: ${torneioC_selecionados.length} / 16`;
         document.getElementById('c-btn-confirmar-lista').disabled = torneioC_selecionados.length !== 16;
         torneioC_renderizarFixadas();
         torneioC_carregarLista();
@@ -439,24 +492,25 @@
 
     function torneioC_resetTotal() {
         if(confirm("Deseja mesmo apagar todos os dados do Torneio C e começar do zero?")) {
-            localStorage.removeItem('padel_save_v13');
+            try { localStorage.removeItem('padel_save_v13'); } catch (e) {}
             location.reload();
         }
     }
 
     function torneioC_carregarLista() {
-        const tbody = document.getElementById('c-lista-atlet'); tbody.innerHTML = "";
-        baseDadosAtletas.sort((a,b) => a.nome.localeCompare(b.nome));
-        baseDadosAtletas.forEach(at => {
+        const tbody = document.getElementById('c-lista-atlet');
+        if (!tbody) return;
+        baseDadosAtletas.sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
+        tbody.innerHTML = baseDadosAtletas.map(at => {
             const isChecked = torneioC_selecionados.includes(at.id) ? "checked" : "";
-            tbody.innerHTML += `<tr><td style="text-align:center; width:50px;"><input type="checkbox" ${isChecked} onchange="torneioC_toggle(${at.id}, this)"></td><td><strong>${at.nome}</strong></td></tr>`;
-        });
+            return `<tr><td style="text-align:center; width:50px;"><input type="checkbox" ${isChecked} onchange="torneioC_toggle(${at.id}, this)"></td><td><strong>${esc(at.nome)}</strong></td></tr>`;
+        }).join('');
     }
 
     function torneioC_toggle(id, el) {
         if(el.checked) { if(torneioC_selecionados.length < 16) torneioC_selecionados.push(id); else { el.checked = false; alert("Limite de 16 atletas!"); } }
         else torneioC_selecionados = torneioC_selecionados.filter(s=>s!==id);
-        document.getElementById('c-txt-contador').innerText = `Selecionados: ${torneioC_selecionados.length} / 16`;
+        document.getElementById('c-txt-contador').textContent = `Selecionados: ${torneioC_selecionados.length} / 16`;
         document.getElementById('c-btn-confirmar-lista').disabled = torneioC_selecionados.length !== 16;
         torneioC_salvarEstado();
     }
@@ -464,13 +518,13 @@
     function torneioC_adicionarAtleta() {
         const nome = document.getElementById('c-novo-nome').value.trim();
         const data = document.getElementById('c-nova-data').value;
-        if (!nome || !data) return alert("Preencha nome e data.");
-        const novoAtleta = { id: Date.now(), nome, data };
-        baseDadosAtletas.push(novoAtleta);
-        document.getElementById('c-novo-nome').value = ""; 
-        torneioC_carregarLista();
-        if(typeof carregarLista === 'function') carregarLista();
-        if(typeof carregarListaEsc === 'function') carregarListaEsc();
+        if (!nome || !data) return alert("Preencha nome e data de nascimento.");
+        if (baseDadosAtletas.some(a => a.nome.toLowerCase() === nome.toLowerCase())) return alert("Já existe um atleta com esse nome.");
+        baseDadosAtletas.push({ id: novoIdAtleta(), nome, data });
+        document.getElementById('c-novo-nome').value = "";
+        document.getElementById('c-nova-data').value = "";
+        guardarAtletas();
+        sincronizarListasAtletas();
         torneioC_salvarEstado();
     }
 
@@ -512,10 +566,9 @@
 
     function torneioC_renderizarFixadas() {
         const div = document.getElementById('c-lista-duplas-fixadas');
-        div.innerHTML = "";
-        torneioC_duplasFixadas.forEach((d, idx) => {
-            div.innerHTML += `<div class="item-fixado">${d.p1.nome} / ${d.p2.nome} <button class="btn-remove-fix" onclick="torneioC_removerFixada(${idx})">✕</button></div>`;
-        });
+        if (!div) return;
+        div.innerHTML = torneioC_duplasFixadas.map((d, idx) =>
+            `<div class="item-fixado">${esc(d.p1.nome)} / ${esc(d.p2.nome)} <button class="btn-remove-fix" onclick="torneioC_removerFixada(${idx})">✕</button></div>`).join('');
     }
 
     function torneioC_removerFixada(idx) {
@@ -565,7 +618,8 @@
     }
 
     function torneioC_atualizarInterface() {
-        const grid = document.getElementById('c-grid-campos'); grid.innerHTML = '';
+        const grid = document.getElementById('c-grid-campos');
+        const campos = [];
         const classA = torneioC_ordenarEquipas(torneioC_duplas.filter(d=>d.grupo==='A'));
         const classB = torneioC_ordenarEquipas(torneioC_duplas.filter(d=>d.grupo==='B'));
         torneioC_desenharTabela('A', classA); torneioC_desenharTabela('B', classB);
@@ -577,68 +631,68 @@
 
         if(torneioC_fase === "GRUPOS") {
             if(torneioC_rAtual <= 3) {
-                document.getElementById('c-titulo-fase').innerText = "Fase de Grupos - Ronda " + torneioC_rAtual;
+                document.getElementById('c-titulo-fase').textContent = "Fase de Grupos - Ronda " + torneioC_rAtual;
                 
                 // CRIAÇÃO DE ORDENS FIXAS PARA GERAR OS JOGOS SEM REPETIÇÕES
                 const fixoA = [...torneioC_duplas.filter(d=>d.grupo==='A')].sort((a,b) => a.id - b.id);
                 const fixoB = [...torneioC_duplas.filter(d=>d.grupo==='B')].sort((a,b) => a.id - b.id);
                 
                 const jr = [[[0,1],[2,3]], [[0,2],[1,3]], [[0,3],[1,2]]][torneioC_rAtual-1];
-                torneioC_addCampo(grid, "Campo 1 (Gr.A)", fixoA[jr[0][0]], fixoA[jr[0][1]], 0, "bg-champions");
-                torneioC_addCampo(grid, "Campo 2 (Gr.B)", fixoB[jr[0][0]], fixoB[jr[0][1]], 1, "bg-europa");
-                torneioC_addCampo(grid, "Campo 3 (Gr.A)", fixoA[jr[1][0]], fixoA[jr[1][1]], 2, "bg-champions");
-                torneioC_addCampo(grid, "Campo 4 (Gr.B)", fixoB[jr[1][0]], fixoB[jr[1][1]], 3, "bg-europa");
-            } else { torneioC_fase = "MEIAS"; torneioC_atualizarInterface(); }
+                campos.push(torneioC_addCampo("Campo 1 (Gr.A)", fixoA[jr[0][0]], fixoA[jr[0][1]], 0, "bg-champions"));
+                campos.push(torneioC_addCampo("Campo 2 (Gr.B)", fixoB[jr[0][0]], fixoB[jr[0][1]], 1, "bg-europa"));
+                campos.push(torneioC_addCampo("Campo 3 (Gr.A)", fixoA[jr[1][0]], fixoA[jr[1][1]], 2, "bg-champions"));
+                campos.push(torneioC_addCampo("Campo 4 (Gr.B)", fixoB[jr[1][0]], fixoB[jr[1][1]], 3, "bg-europa"));
+            } else { torneioC_fase = "MEIAS"; torneioC_atualizarInterface(); return; }
         } 
         else if(torneioC_fase === "MEIAS") {
-            document.getElementById('c-titulo-fase').innerText = "MEIAS-FINAIS";
-            torneioC_addCampo(grid, "Champ: 1ºA vs 2ºB", classA[0], classB[1], 0, "bg-champions");
-            torneioC_addCampo(grid, "Champ: 1ºB vs 2ºA", classB[0], classA[1], 1, "bg-champions");
-            torneioC_addCampo(grid, "Euro: 3ºA vs 4ºB", classA[2], classB[3], 2, "bg-europa");
-            torneioC_addCampo(grid, "Euro: 3ºB vs 4ºA", classB[2], classA[3], 3, "bg-europa");
+            document.getElementById('c-titulo-fase').textContent = "MEIAS-FINAIS";
+            campos.push(torneioC_addCampo("Champ: 1ºA vs 2ºB", classA[0], classB[1], 0, "bg-champions"));
+            campos.push(torneioC_addCampo("Champ: 1ºB vs 2ºA", classB[0], classA[1], 1, "bg-champions"));
+            campos.push(torneioC_addCampo("Euro: 3ºA vs 4ºB", classA[2], classB[3], 2, "bg-europa"));
+            campos.push(torneioC_addCampo("Euro: 3ºB vs 4ºA", classB[2], classA[3], 3, "bg-europa"));
         }
         else if(torneioC_fase === "FINAIS") {
-            document.getElementById('c-titulo-fase').innerText = "GRANDES FINAIS";
-            torneioC_addCampo(grid, "FINAL LIGA CAMPEÕES", torneioC_resultadosMeias[0].venc, torneioC_resultadosMeias[1].venc, 0, "bg-champions");
-            torneioC_addCampo(grid, "FINAL LIGA EUROPA", torneioC_resultadosMeias[2].venc, torneioC_resultadosMeias[3].venc, 1, "bg-europa");
-            torneioC_addCampo(grid, "FINAL LIGA CONFERÊNCIA", torneioC_resultadosMeias[0].perd, torneioC_resultadosMeias[1].perd, 2, "bg-finalistas");
-            torneioC_addCampo(grid, "TAÇA CÂNDIDO", torneioC_resultadosMeias[2].perd, torneioC_resultadosMeias[3].perd, 3, "bg-candido");
-            document.getElementById('c-btn-gravar').innerText = "Concluir Torneio";
+            document.getElementById('c-titulo-fase').textContent = "GRANDES FINAIS";
+            campos.push(torneioC_addCampo("FINAL LIGA CAMPEÕES", torneioC_resultadosMeias[0].venc, torneioC_resultadosMeias[1].venc, 0, "bg-champions"));
+            campos.push(torneioC_addCampo("FINAL LIGA EUROPA", torneioC_resultadosMeias[2].venc, torneioC_resultadosMeias[3].venc, 1, "bg-europa"));
+            campos.push(torneioC_addCampo("FINAL LIGA CONFERÊNCIA", torneioC_resultadosMeias[0].perd, torneioC_resultadosMeias[1].perd, 2, "bg-finalistas"));
+            campos.push(torneioC_addCampo("TAÇA CÂNDIDO", torneioC_resultadosMeias[2].perd, torneioC_resultadosMeias[3].perd, 3, "bg-candido"));
+            document.getElementById('c-btn-gravar').textContent = "Concluir Torneio";
         }
         else if(torneioC_fase === "CONCLUIDO") {
             document.getElementById('c-card-classificacao').classList.add('escondido');
-            document.getElementById('c-titulo-fase').innerText = "FIM DO TORNEIO";
+            document.getElementById('c-titulo-fase').textContent = "FIM DO TORNEIO";
             document.getElementById('c-btn-gravar').classList.add('escondido');
             document.getElementById('c-btn-voltar-ronda').classList.add('escondido');
             document.getElementById('c-btn-backup').classList.add('escondido');
             document.getElementById('c-area-conclusao').classList.remove('escondido');
-            document.getElementById('c-lbl-campeao').innerText = torneioC_resultadosFinais[0].vencedor.nome;
-            document.getElementById('c-lbl-europa').innerText = torneioC_resultadosFinais[1].vencedor.nome;
-            document.getElementById('c-lbl-candido').innerText = torneioC_resultadosFinais[3].perdedor.nome; 
+            document.getElementById('c-lbl-campeao').textContent = torneioC_resultadosFinais[0].vencedor.nome;
+            document.getElementById('c-lbl-europa').textContent = torneioC_resultadosFinais[1].vencedor.nome;
+            document.getElementById('c-lbl-candido').textContent = torneioC_resultadosFinais[3].perdedor.nome; 
             const tbodyRanking = document.getElementById('c-corpo-ranking');
-            tbodyRanking.innerHTML = "<tr><th>Pos</th><th>Dupla</th><th>Pontos</th></tr>";
-            torneioC_rankingDuplas.forEach((item, idx) => {
-                tbodyRanking.innerHTML += `<tr><td>${idx + 1}º</td><td style="text-align:left">${item.nomeDupla}</td><td><strong>${item.pts}</strong></td></tr>`;
-            });
+            tbodyRanking.innerHTML = "<tr><th>Pos</th><th>Dupla</th><th>Pontos</th></tr>" +
+                torneioC_rankingDuplas.map((item, idx) =>
+                    `<tr><td>${idx + 1}º</td><td style="text-align:left">${esc(item.nomeDupla)}</td><td><strong>${item.pts}</strong></td></tr>`).join('');
         }
+        grid.innerHTML = campos.join('');
     }
 
     function torneioC_desenharTabela(g, lista) {
-        const c = document.getElementById('c-corpo-'+g); c.innerHTML = '';
-        lista.forEach((d, i) => {
-            let res = d.jogos.map(j=>j?`<td>${j.g}-${j.p}</td>`:`<td>-</td>`).join('');
-            c.innerHTML += `<tr><td>${i+1}º</td><td style="text-align:left">${d.nome}</td>${res}<td>${d.v}</td><td>${d.e}</td><td>${d.d}</td><td>${d.dif}</td><td class="pts-total">${d.pts}</td></tr>`;
-        });
+        const c = document.getElementById('c-corpo-' + g);
+        c.innerHTML = lista.map((d, i) => {
+            const res = d.jogos.map(j => j ? `<td>${j.g}-${j.p}</td>` : `<td>-</td>`).join('');
+            return `<tr><td>${i+1}º</td><td style="text-align:left">${esc(d.nome)}</td>${res}<td>${d.v}</td><td>${d.e}</td><td>${d.d}</td><td>${d.dif}</td><td class="pts-total">${d.pts}</td></tr>`;
+        }).join('');
     }
 
-    function torneioC_addCampo(grid, tit, d1, d2, idCampo, cl) {
+    function torneioC_addCampo(tit, d1, d2, idCampo, cl) {
         let v1_val = 0, v2_val = 0;
         if (torneioC_fase === "GRUPOS") { let j = d1.jogos[torneioC_rAtual-1]; if (j && j.contraId === d2.id) { v1_val = j.g; v2_val = j.p; } }
-        grid.innerHTML += `<div class="campo"><h4 class="${cl}">${tit}</h4><div class="dupla-box"><span>${d1.nome}</span><br><input type="number" id="c-v1-${idCampo}" data-id="${d1.id}" value="${v1_val}"></div><div class="vs">VS</div><div class="dupla-box"><span>${d2.nome}</span><br><input type="number" id="c-v2-${idCampo}" data-id="${d2.id}" value="${v2_val}"></div></div>`;
+        return `<div class="campo"><h4 class="${cl}">${esc(tit)}</h4><div class="dupla-box"><span>${esc(d1.nome)}</span><br><input type="number" inputmode="numeric" min="0" id="c-v1-${idCampo}" data-id="${d1.id}" value="${v1_val}"></div><div class="vs">VS</div><div class="dupla-box"><span>${esc(d2.nome)}</span><br><input type="number" inputmode="numeric" min="0" id="c-v2-${idCampo}" data-id="${d2.id}" value="${v2_val}"></div></div>`;
     }
 
     function torneioC_voltarRonda() {
-        if (torneioC_fase === "FINAIS") { torneioC_fase = "MEIAS"; document.getElementById('c-btn-gravar').innerText = "Gravar Resultados"; }
+        if (torneioC_fase === "FINAIS") { torneioC_fase = "MEIAS"; document.getElementById('c-btn-gravar').textContent = "Gravar Resultados"; }
         else if (torneioC_fase === "MEIAS") { torneioC_fase = "GRUPOS"; torneioC_rAtual = 3; }
         else if (torneioC_fase === "GRUPOS" && torneioC_rAtual > 1) { torneioC_rAtual--; torneioC_duplas.forEach(d => d.jogos[torneioC_rAtual-1] = null); }
         torneioC_duplas.forEach(d=>{
@@ -668,6 +722,11 @@
             });
             torneioC_rAtual++;
         } else if(torneioC_fase === "MEIAS") {
+            for (let i = 0; i < 4; i++) {
+                const a = parseInt(document.getElementById(`c-v1-${i}`).value) || 0;
+                const b = parseInt(document.getElementById(`c-v2-${i}`).value) || 0;
+                if (a === b) return alert(`Empate no Campo ${i+1}. Nas meias-finais é obrigatório haver vencedor — jogue o desempate e registe o resultado final.`);
+            }
             torneioC_resultadosMeias = [];
             for(let i=0; i<4; i++) {
                 let v1 = parseInt(document.getElementById(`c-v1-${i}`).value) || 0;
@@ -679,6 +738,11 @@
             }
             torneioC_fase = "FINAIS";
         } else if(torneioC_fase === "FINAIS") {
+            for (let i = 0; i < 4; i++) {
+                const a = parseInt(document.getElementById(`c-v1-${i}`).value) || 0;
+                const b = parseInt(document.getElementById(`c-v2-${i}`).value) || 0;
+                if (a === b) return alert(`Empate no Campo ${i+1}. Nas finais é obrigatório haver vencedor — jogue o desempate e registe o resultado final.`);
+            }
             torneioC_resultadosFinais = [];
             let ligas = ["FINAL LIGA CAMPEÕES", "FINAL LIGA EUROPA", "FINAL LIGA CONFERÊNCIA", "TAÇA CÂNDIDO"];
             let d1Arr = [torneioC_resultadosMeias[0].venc, torneioC_resultadosMeias[2].venc, torneioC_resultadosMeias[0].perd, torneioC_resultadosMeias[2].perd];
@@ -721,12 +785,12 @@
         renderizarInputs();
 
         db.listaAtletas.forEach(nome => {
-            const inputElement = document.getElementById(`p-${nome.replace(/\s+/g,'_')}`);
+            const inputElement = document.getElementById(`p-${idAtleta(nome)}`);
             if (inputElement) inputElement.value = 0;
         });
 
         Object.entries(ptsMapeados).forEach(([nome, pts]) => {
-            const inputElement = document.getElementById(`p-${nome.replace(/\s+/g,'_')}`);
+            const inputElement = document.getElementById(`p-${idAtleta(nome)}`);
             if (inputElement) {
                 inputElement.value = pts;
             }
@@ -737,11 +801,12 @@
 
         setTimeout(() => {
             document.getElementById('lista-inputs').scrollIntoView({ behavior: 'smooth' });
-            alert("Sucesso! As pontuações individuais do Torneio C foram calculadas e injetadas no formulário do Ranking Geral abaixo.");
+            alert("Pontuações do Torneio Liga inseridas no formulário do Ranking Geral. Confirme os valores e clique em «Gravar Resultados do Torneio».");
         }, 300);
     }
 
     function torneioC_gerarPDF(isBackup = false) {
+        if (!pdfDisponivel()) return;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'pt', 'a4');
         const dataHoje = new Date().toLocaleDateString('pt-PT');
@@ -835,9 +900,6 @@
         }
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-        torneioC_carregarEstado();
-    });
 </script>
         </div>
     </div>
@@ -940,8 +1002,8 @@
         { id: 23, nome: "Luís Frias", data: "1995-12-04" }, { id: 24, nome: "Jorge Santos", data: "1966-05-20" },
         { id: 25, nome: "João Moedas Nadal", data: "1989-07-28" }, { id: 26, nome: "António Jorge", data: "1968-11-07" },
         { id: 27, nome: "Gustavo Faria", data: "2005-05-13" }, { id: 28, nome: "Bárbara Mota", data: "1994-09-29" },
-        { id: 29, nome: "Rui Paulo", data: "1967-05-30" },{ id: 30, nome: "Miguel Fernandes", data: "1995-03-27" },
-        { id: 31, nome: "Nuno Teixeira", data: "2025-05-13" }, { id: 32, nome: "Carlos Ferreira", data: "1969-12-03" },
+        { id: 29, nome: "Rui Paulo", data: "1967-05-30" }, { id: 30, nome: "Miguel Fernandes", data: "1995-03-27" },
+        { id: 31, nome: "Nuno Teixeira", data: "2000-05-13" }, { id: 32, nome: "Carlos Ferreira", data: "1969-12-03" },
         { id: 33, nome: "Carlos Branco", data: "1994-07-06" }, { id: 34, nome: "Luís Marques", data: "1966-09-13" },
         { id: 35, nome: "Carlos Costa", data: "1962-06-28" }, { id: 36, nome: "Paulo Cordeiro", data: "1969-12-21" },
 		{ id: 37, nome: "Francisco Silva", data: "2001-05-09" }, { id: 38, nome: "Miguel Ferreira", data: "2002-04-11" },
@@ -950,6 +1012,30 @@
 		{ id: 43, nome: "Frederico Rocha", data: "1975-05-25" }, { id: 44, nome: "Ricardo Sarmento", data: "1976-01-07" }
     ];
 
+    // --- Persistência da base de atletas (partilhada pelos 3 torneios) ---
+    const CHAVE_ATLETAS = 'padel_atletas_v1';
+    function guardarAtletas() {
+        try { localStorage.setItem(CHAVE_ATLETAS, JSON.stringify(baseDadosAtletas)); }
+        catch (e) { console.warn("Falha ao gravar a lista de atletas:", e); }
+    }
+    function carregarAtletas() {
+        try {
+            const guardado = JSON.parse(localStorage.getItem(CHAVE_ATLETAS));
+            if (Array.isArray(guardado) && guardado.length) {
+                // funde: mantém os de origem e acrescenta os que foram criados no dispositivo
+                const porNome = new Map(baseDadosAtletas.map(a => [a.nome.toLowerCase(), a]));
+                guardado.forEach(a => { if (a && a.nome && !porNome.has(a.nome.toLowerCase())) porNome.set(a.nome.toLowerCase(), a); });
+                baseDadosAtletas = [...porNome.values()];
+            }
+        } catch (e) { console.warn("Lista de atletas guardada inválida:", e); }
+    }
+    function novoIdAtleta() {
+        let id = Date.now();
+        while (baseDadosAtletas.some(a => a.id === id)) id++;   // evita colisões no mesmo milissegundo
+        return id;
+    }
+    carregarAtletas();
+
     let selecionadosIds = [];
     let atletasTorneio = [];
     let rAtual = 1;
@@ -957,14 +1043,18 @@
 
     function guardarProgresso() {
         const estado = { selecionadosIds, atletasTorneio, rAtual, historicoRondas };
-        localStorage.setItem('torneio_mexicano_save', JSON.stringify(estado));
+        try { localStorage.setItem('torneio_mexicano_save', JSON.stringify(estado)); }
+        catch (e) { console.warn("Falha ao gravar o Torneio Mexicano:", e); }
     }
 
     function recuperarProgresso() {
-        const salvo = localStorage.getItem('torneio_mexicano_save');
+        let salvo = null;
+        try { salvo = localStorage.getItem('torneio_mexicano_save'); } catch (e) { console.warn(e); }
         if (salvo) {
-            if (confirm("Encontramos um torneio em curso. Deseja retomar?")) {
-                const dados = JSON.parse(salvo);
+            if (confirm("Existe um Torneio Mexicano em curso. Deseja retomar?")) {
+                let dados = {};
+                try { dados = JSON.parse(salvo) || {}; }
+                catch (e) { console.warn("Estado do Mexicano corrompido:", e); localStorage.removeItem('torneio_mexicano_save'); return; }
                 selecionadosIds = dados.selecionadosIds;
                 atletasTorneio = dados.atletasTorneio;
                 rAtual = dados.rAtual;
@@ -974,32 +1064,34 @@
                 document.getElementById('seccao-torneio').classList.remove('escondido');
                 atualizarInterface();
             } else {
-                localStorage.removeItem('torneio_mexicano_save');
+                try { localStorage.removeItem('torneio_mexicano_save'); } catch (e) {}
             }
         }
     }
 
     function carregarLista() {
         const tbody = document.getElementById('lista-inscritos');
-        tbody.innerHTML = "";
-        baseDadosAtletas.sort((a,b) => a.nome.localeCompare(b.nome));
-        baseDadosAtletas.forEach(at => {
+        if (!tbody) return;
+        baseDadosAtletas.sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
+        tbody.innerHTML = baseDadosAtletas.map(at => {
             const isChecked = selecionadosIds.includes(at.id) ? "checked" : "";
-            tbody.innerHTML += `<tr>
+            return `<tr>
                 <td style="text-align:center"><input type="checkbox" ${isChecked} onchange="toggleAtleta(${at.id}, this)"></td>
-                <td><strong>${at.nome}</strong></td>
+                <td><strong>${esc(at.nome)}</strong></td>
             </tr>`;
-        });
+        }).join('');
     }
 
     function adicionarAtletaMex() {
-        const nome = document.getElementById('novo-nome').value;
+        const nome = document.getElementById('novo-nome').value.trim();
         const data = document.getElementById('nova-data').value;
-        if (!nome || !data) return alert("Preencha nome e data.");
-        baseDadosAtletas.push({ id: Date.now(), nome, data });
+        if (!nome || !data) return alert("Preencha nome e data de nascimento.");
+        if (baseDadosAtletas.some(a => a.nome.toLowerCase() === nome.toLowerCase())) return alert("Já existe um atleta com esse nome.");
+        baseDadosAtletas.push({ id: novoIdAtleta(), nome, data });
         document.getElementById('novo-nome').value = "";
-        carregarLista();
-        if(typeof carregarListaEsc === 'function') carregarListaEsc(); // Sincroniza listagem Escada
+        document.getElementById('nova-data').value = "";
+        guardarAtletas();
+        sincronizarListasAtletas();   // Mexicano + Escada + Liga
     }
 
     function toggleAtleta(id, el) {
@@ -1007,7 +1099,7 @@
             if (selecionadosIds.length < 16) selecionadosIds.push(id);
             else { el.checked = false; alert("Máximo de 16 jogadores!"); }
         } else { selecionadosIds = selecionadosIds.filter(sid => sid !== id); }
-        document.getElementById('txt-contador').innerText = `Selecionados: ${selecionadosIds.length} / 16`;
+        document.getElementById('txt-contador').textContent = `Selecionados: ${selecionadosIds.length} / 16`;
         document.getElementById('btn-confirmar').disabled = (selecionadosIds.length !== 16);
     }
 
@@ -1039,32 +1131,33 @@
 
     function atualizarInterface() {
         const btnV = document.getElementById('btn-voltar');
-        if (rAtual > 1 && rAtual <= 9) btnV.classList.remove('escondido');
-        else btnV.classList.add('escondido');
+        if (btnV) btnV.classList.toggle('escondido', rAtual <= 1);   // continua disponível no fim, para corrigir a 9.ª ronda
 
         const corpo = document.getElementById('corpo-classificacao');
-        corpo.innerHTML = '';
         let ordenados = [...atletasTorneio].sort((a, b) => a.posicao - b.posicao);
 
-        ordenados.forEach(at => {
-            let pts = at.pontos.map((p, i) => `<td>${i < rAtual-1 ? p : '-'}</td>`).join('');
-            corpo.innerHTML += `<tr>
+        corpo.innerHTML = ordenados.map(at => {
+            const pts = at.pontos.map((p, i) => `<td>${i < rAtual-1 ? p : '-'}</td>`).join('');
+            return `<tr>
                 <td><strong>${at.posicao}º</strong></td>
-                <td style="text-align:left"><strong>${at.nome}</strong></td>
+                <td style="text-align:left"><strong>${esc(at.nome)}</strong></td>
                 ${pts}
                 <td class="destaque-total">${at.total}</td>
             </tr>`;
-        });
+        }).join('');
+
+        document.getElementById('area-terminado').classList.toggle('escondido', rAtual <= 9);
+        document.getElementById('grid-campos').classList.toggle('escondido', rAtual > 9);
+        document.getElementById('btn-gravar-ronda').classList.toggle('escondido', rAtual > 9);
 
         if (rAtual <= 9) {
-            document.getElementById('titulo-ronda').innerText = "Ronda " + rAtual;
+            document.getElementById('titulo-ronda').textContent = "Ronda " + rAtual;
             const grid = document.getElementById('grid-campos');
-            grid.innerHTML = '';
             const cruzamentoMap = [{id:1, idxs:[[0,3],[1,2]]}, {id:2, idxs:[[4,7],[5,6]]}, {id:3, idxs:[[8,11],[9,10]]}, {id:4, idxs:[[12,15],[13,14]]}];
-            
-            cruzamentoMap.forEach((conf, i) => {
+
+            grid.innerHTML = cruzamentoMap.map((conf, i) => {
                 const p = [ordenados[conf.idxs[0][0]], ordenados[conf.idxs[0][1]], ordenados[conf.idxs[1][0]], ordenados[conf.idxs[1][1]]];
-                grid.innerHTML += `
+                return `
                     <div class="campo">
                         <h4>Campo ${conf.id}</h4>
                         <div class="confronto-row">
@@ -1073,13 +1166,13 @@
                                 <div class="jogador-linha" title="${p[1].nome}"><span class="pos-badge">${conf.idxs[0][1]+1}º</span>${p[1].nome}</div>
                             </div>
                             
-                            <input type="number" id="c-${i}-d-1" oninput="autoCompletar(${i}, 1)" 
+                            <input type="number" inputmode="numeric" id="c-${i}-d-1" oninput="autoCompletar(${i}, 1)" 
                                 data-at1-nome="${p[0].nome}" data-at1-id="${p[0].id}" 
                                 data-at2-nome="${p[1].nome}" data-at2-id="${p[1].id}" placeholder="-">
                             
                             <span class="vs-label">vs</span>
                             
-                            <input type="number" id="c-${i}-d-2" oninput="autoCompletar(${i}, 2)" 
+                            <input type="number" inputmode="numeric" id="c-${i}-d-2" oninput="autoCompletar(${i}, 2)" 
                                 data-at3-nome="${p[2].nome}" data-at3-id="${p[2].id}" 
                                 data-at4-nome="${p[3].nome}" data-at4-id="${p[3].id}" placeholder="-">
                             
@@ -1089,10 +1182,26 @@
                             </div>
                         </div>
                     </div>`;
-            });
+            }).join('');
         } else {
-            document.getElementById('area-jogo').innerHTML = "<h2 style='color:green; text-align:center;'>Torneio Terminado!</h2><p style='text-align:center;'>Clique acima para gerar o PDF e enviar as pontuações para o ranking geral.</p><button style='display:block; margin: 10px auto; padding:10px 20px;' onclick='localStorage.removeItem(\"torneio_mexicano_save\"); location.reload();'>Iniciar Novo Torneio</button>";
+            document.getElementById('titulo-ronda').textContent = "Torneio Terminado";
         }
+    }
+
+    function novoTorneioMex() {
+        if (!confirm("Iniciar um novo Torneio Mexicano? Os dados atuais serão apagados.")) return;
+        try { localStorage.removeItem('torneio_mexicano_save'); } catch (e) {}
+        location.reload();
+    }
+
+    // Critério único de ordenação do Mexicano: pontos e, em caso de empate, jogador mais velho.
+    // O sorteio inicial (ordemInicial) fica como último recurso para garantir uma ordem estável.
+    function compararMexicano(a, b) {
+        if (b.total !== a.total) return b.total - a.total;
+        const ta = Number.isFinite(a.timeBirth) ? a.timeBirth : Infinity;
+        const tb = Number.isFinite(b.timeBirth) ? b.timeBirth : Infinity;
+        if (ta !== tb) return ta - tb;                  // data menor = mais velho = melhor posição
+        return (a.ordemInicial || 0) - (b.ordemInicial || 0);
     }
 
     function processarRonda() {
@@ -1119,8 +1228,8 @@
     historicoRondas.push({ num: rAtual, jogos: dadosRonda });
 	atletasTorneio.forEach(at => at.total = at.pontos.reduce((a, b) => a + b, 0));
     
-    // ALTERADO: Desempata pela ordem inicial do sorteio
-    atletasTorneio.sort((a, b) => b.total !== a.total ? b.total - a.total : a.timeBirth - b.timeBirth);
+    // Desempate: 1) pontos  2) jogador mais velho (mesmo critério em processarRonda e voltarRonda)
+    atletasTorneio.sort(compararMexicano);
     
     atletasTorneio.forEach((at, idx) => at.posicao = idx + 1);
 	rAtual++; 
@@ -1135,8 +1244,8 @@
         atletasTorneio.forEach(at => { at.pontos[rAtual - 1] = 0; at.total = at.pontos.reduce((a, b) => a + b, 0); });
         historicoRondas.pop();
         
-        // ALTERADO: Desempata pela ordem inicial do sorteio ao voltar atrás
-        atletasTorneio.sort((a, b) => b.total !== a.total ? b.total - a.total : a.ordemInicial - b.ordemInicial);
+        // Desempate: mesmo critério usado ao gravar a ronda (jogador mais velho)
+        atletasTorneio.sort(compararMexicano);
         
         atletasTorneio.forEach((at, idx) => at.posicao = idx + 1);
         guardarProgresso();
@@ -1144,35 +1253,33 @@
     }
 }
 
-// Executa automaticamente ao carregar o site para recuperar dados do LocalStorage
-document.addEventListener('DOMContentLoaded', recuperarProgresso);
-
     function gerarPDFMex() {
+        if (!pdfDisponivel()) return;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'pt', 'a4');
-        
-        doc.setFontSize(20); 
+
+        doc.setFontSize(20);
         doc.setTextColor(26, 58, 90);
         doc.text("Relatório Final - Torneio Mexicano", 40, 50);
-        
+
         doc.setFontSize(10);
         doc.setTextColor(100);
         const dataAtual = new Date().toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' });
         doc.text("Gerado a: " + dataAtual, 40, 70);
-        
-        const dadosTabela = atletasTorneio.map(at => [
-            at.posicao + "º", at.nome, at.total, (17 - at.posicao)
-        ]);
-        
+
+        const dadosTabela = [...atletasTorneio]
+            .sort((a, b) => a.posicao - b.posicao)
+            .map(at => [at.posicao + "º", at.nome, at.total, (17 - at.posicao)]);
+
         doc.autoTable({
             head: [['Pos', 'Jogador', 'Total', 'Pts Ranking']],
             body: dadosTabela, startY: 80, theme: 'grid', styles: { fontSize: 9, halign: 'center' },
-            columnStyles: { 
+            columnStyles: {
                 1: { halign: 'left', fontStyle: 'bold' },
-                3: { fillColor: [233, 236, 239], fontStyle: 'bold' } 
+                3: { fillColor: [233, 236, 239], fontStyle: 'bold' }
             }
         });
-        
+
         let finalY = doc.lastAutoTable.finalY + 30;
         historicoRondas.forEach(ronda => {
             if (finalY > 750) { doc.addPage(); finalY = 50; }
@@ -1186,56 +1293,7 @@ document.addEventListener('DOMContentLoaded', recuperarProgresso);
             });
             finalY = doc.lastAutoTable.finalY + 25;
         });
-        
-        doc.save("Torneio_Mexicano_Final.pdf");
 
-        // --- PONTE DE DADOS AUTOMÁTICA PARA O RANKING ---
-        enviarResultadosParaORanking();
-    }
-
-// Executa automaticamente ao carregar o site para recuperar dados do LocalStorage
-document.addEventListener('DOMContentLoaded', recuperarProgresso);
-
-    function gerarPDFMex() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'pt', 'a4');
-        
-        doc.setFontSize(20); 
-        doc.setTextColor(26, 58, 90);
-        doc.text("Relatório Final - Torneio Mexicano", 40, 50);
-        
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        const dataAtual = new Date().toLocaleString('pt-PT', { dateStyle: 'short', timeStyle: 'short' });
-        doc.text("Gerado a: " + dataAtual, 40, 70);
-        
-        const dadosTabela = atletasTorneio.map(at => [
-            at.posicao + "º", at.nome, at.total, (17 - at.posicao)
-        ]);
-        
-        doc.autoTable({
-            head: [['Pos', 'Jogador', 'Total', 'Pts Ranking']],
-            body: dadosTabela, startY: 80, theme: 'grid', styles: { fontSize: 9, halign: 'center' },
-            columnStyles: { 
-                1: { halign: 'left', fontStyle: 'bold' },
-                3: { fillColor: [233, 236, 239], fontStyle: 'bold' } 
-            }
-        });
-        
-        let finalY = doc.lastAutoTable.finalY + 30;
-        historicoRondas.forEach(ronda => {
-            if (finalY > 750) { doc.addPage(); finalY = 50; }
-            doc.setFontSize(11); doc.setTextColor(217, 83, 79);
-            doc.text("HISTÓRICO DA RONDA " + ronda.num, 40, finalY);
-            doc.autoTable({
-                startY: finalY + 10, head: [['Campo', 'Dupla A', '', 'Dupla B', 'Resultado']],
-                body: ronda.jogos.map(j => [j.campo, j.duplaA, "vs", j.duplaB, j.resultado]),
-                theme: 'striped', styles: { fontSize: 8, halign: 'center' },
-                columnStyles: { 1: { halign: 'right' }, 3: { halign: 'left' }, 2: { cellWidth: 20 } }
-            });
-            finalY = doc.lastAutoTable.finalY + 25;
-        });
-        
         doc.save("Torneio_Mexicano_Final.pdf");
 
         // --- PONTE DE DADOS AUTOMÁTICA PARA O RANKING ---
@@ -1253,13 +1311,13 @@ document.addEventListener('DOMContentLoaded', recuperarProgresso);
         renderizarInputs();
 
         db.listaAtletas.forEach(nome => {
-            const inputElement = document.getElementById(`p-${nome.replace(/\s+/g,'_')}`);
+            const inputElement = document.getElementById(`p-${idAtleta(nome)}`);
             if (inputElement) inputElement.value = 0;
         });
 
         atletasTorneio.forEach(at => {
             const ptsRanking = 17 - at.posicao;
-            const inputElement = document.getElementById(`p-${at.nome.replace(/\s+/g,'_')}`);
+            const inputElement = document.getElementById(`p-${idAtleta(at.nome)}`);
             if (inputElement) {
                 inputElement.value = ptsRanking;
             }
@@ -1270,271 +1328,386 @@ document.addEventListener('DOMContentLoaded', recuperarProgresso);
         
         setTimeout(() => {
             document.getElementById('lista-inputs').scrollIntoView({ behavior: 'smooth' });
-            alert("Sucesso! As pontuações do Torneio Mexicano foram calculadas e injetadas no formulário do Ranking Geral abaixo.");
+            alert("Pontuações do Torneio Mexicano inseridas no formulário do Ranking Geral. Confirme os valores e clique em «Gravar Resultados do Torneio».");
         }, 300);
     }
 
     // =================================================================
     // SCRIPT: TORNEIO B - ESCADA (ADICIONADO E INTEGRADO)
     // =================================================================
-    let baseAtletasEsc = [];
     let selecionadosEsc = [];
     let duplasFixasManuaisEsc = [];
     let duplasFinalEsc = [];
+    let ronda1Esc = [];                 // pares de nomes sorteados para a Ronda 1
+    let finalEsc = [0,1,2,3].map(() => ({ d1: "", d2: "", r1: 0, r2: 0 }));
     let rankingDuplasEsc = [];
     let resultadosPDFEsc = [];
     let vencedorGlobalEsc = "";
     let candidoGlobalEsc = "";
+    let passoEsc = 1;                   // 1 seleção | 2 duplas fixas | 3 torneio | 4 final
+    const CHAVE_ESCADA = 'padel_escada_v1';
 
     function initTorneioEsc() {
-        baseAtletasEsc = JSON.parse(JSON.stringify(baseDadosAtletas));
+        // A Escada usa a MESMA base de atletas dos outros torneios (sem cópia dessincronizada)
         carregarListaEsc();
+        recuperarProgressoEsc();
     }
 
+    // ---------- Persistência ----------
+    function lerFinalEsc() {
+        for (let c = 1; c <= 4; c++) {
+            const d1 = document.getElementById(`esc-f-c${c}-d1`);
+            if (!d1) return;
+            finalEsc[c - 1] = {
+                d1: d1.value,
+                d2: document.getElementById(`esc-f-c${c}-d2`).value,
+                r1: parseInt(document.getElementById(`esc-f-c${c}-r1`).value) || 0,
+                r2: parseInt(document.getElementById(`esc-f-c${c}-r2`).value) || 0
+            };
+        }
+    }
+
+    function guardarProgressoEsc() {
+        lerFinalEsc();
+        try {
+            localStorage.setItem(CHAVE_ESCADA, JSON.stringify({
+                selecionados: selecionadosEsc, fixas: duplasFixasManuaisEsc, duplas: duplasFinalEsc,
+                ronda1: ronda1Esc, final: finalEsc, passo: passoEsc, ranking: rankingDuplasEsc,
+                resultados: resultadosPDFEsc, campeao: vencedorGlobalEsc, candido: candidoGlobalEsc
+            }));
+        } catch (e) { console.warn("Falha ao gravar o Torneio Escada:", e); }
+    }
+
+    function recuperarProgressoEsc() {
+        let d = null;
+        try { d = JSON.parse(localStorage.getItem(CHAVE_ESCADA)); }
+        catch (e) { console.warn("Estado do Torneio Escada inválido:", e); return; }
+        if (!d || !d.passo || d.passo === 1) return;
+
+        selecionadosEsc = d.selecionados || [];
+        duplasFixasManuaisEsc = d.fixas || [];
+        duplasFinalEsc = d.duplas || [];
+        ronda1Esc = d.ronda1 || [];
+        finalEsc = (d.final && d.final.length === 4) ? d.final : finalEsc;
+        rankingDuplasEsc = d.ranking || [];
+        resultadosPDFEsc = d.resultados || [];
+        vencedorGlobalEsc = d.campeao || "";
+        candidoGlobalEsc = d.candido || "";
+
+        carregarListaEsc();
+        document.getElementById('esc-txt-contador').textContent = `Selecionados: ${selecionadosEsc.length} / 16`;
+        document.getElementById('esc-btn-ir-duplas').disabled = selecionadosEsc.length !== 16;
+        renderizarFixasEsc();
+
+        if (d.passo === 2) { mostrarPassoEsc(2); atualizarDropdownsFixosEsc(); }
+        else if (d.passo === 3) { mostrarPassoEsc(3); renderizarTorneioEsc(); }
+        else if (d.passo === 4) { mostrarPassoEsc(4); renderizarRankingEsc(); }
+    }
+
+    function mostrarPassoEsc(n) {
+        passoEsc = n;
+        const mapa = { 1: 'esc-passo-1', 2: 'esc-passo-duplas-fixas', 3: 'esc-passo-torneio', 4: 'esc-passo-4' };
+        Object.values(mapa).forEach(id => document.getElementById(id).classList.add('escondido'));
+        document.getElementById(mapa[n]).classList.remove('escondido');
+    }
+
+    // ---------- Passo 1: seleção ----------
     function carregarListaEsc() {
         const tbody = document.getElementById('esc-lista-atlet');
         if (!tbody) return;
-        tbody.innerHTML = "";
-        baseAtletasEsc.sort((a,b) => a.nome.localeCompare(b.nome)).forEach(at => {
+        baseDadosAtletas.sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
+        tbody.innerHTML = baseDadosAtletas.map(at => {
             const isChecked = selecionadosEsc.includes(at.id) ? "checked" : "";
-            tbody.innerHTML += `<tr>
+            return `<tr>
                 <td style="text-align:center"><input type="checkbox" ${isChecked} onchange="toggleEsc(${at.id}, this)"></td>
-                <td><strong>${at.nome}</strong></td>
+                <td><strong>${esc(at.nome)}</strong></td>
             </tr>`;
-        });
+        }).join('');
     }
 
     function toggleEsc(id, el) {
-        if(el.checked) {
-            if(selecionadosEsc.length < 16) selecionadosEsc.push(id);
-            else { el.checked = false; alert("Limite 16 jogadores!"); }
+        if (el.checked) {
+            if (selecionadosEsc.length < 16) selecionadosEsc.push(id);
+            else { el.checked = false; alert("Limite de 16 jogadores!"); }
         } else selecionadosEsc = selecionadosEsc.filter(s => s !== id);
-        document.getElementById('esc-txt-contador').innerText = `Selecionados: ${selecionadosEsc.length} / 16`;
+        document.getElementById('esc-txt-contador').textContent = `Selecionados: ${selecionadosEsc.length} / 16`;
         document.getElementById('esc-btn-ir-duplas').disabled = selecionadosEsc.length !== 16;
+        guardarProgressoEsc();
     }
 
     function adicionarAtletaEsc() {
         const nome = document.getElementById('esc-novo-nome').value.trim();
         const data = document.getElementById('esc-nova-data').value;
         if (!nome) return alert("Insira um nome válido.");
-        const novoAtleta = { id: Date.now(), nome: nome, data: data || "1990-01-01" };
-        baseAtletasEsc.push(novoAtleta);
-        baseDadosAtletas.push(novoAtleta); // Adiciona sincronizadamente à base dados global
+        if (baseDadosAtletas.some(a => a.nome.toLowerCase() === nome.toLowerCase())) return alert("Já existe um atleta com esse nome.");
+        baseDadosAtletas.push({ id: novoIdAtleta(), nome: nome, data: data || "1990-01-01" });
         document.getElementById('esc-novo-nome').value = "";
-        carregarListaEsc();
-        carregarLista(); // Atualiza painel do Mexicano também
+        document.getElementById('esc-nova-data').value = "";
+        guardarAtletas();
+        sincronizarListasAtletas();
     }
 
+    // ---------- Passo 2: duplas fixas ----------
     function abrirConfigDuplasEsc() {
-        document.getElementById('esc-passo-1').classList.add('escondido');
-        document.getElementById('esc-passo-duplas-fixas').classList.remove('escondido');
+        mostrarPassoEsc(2);
         atualizarDropdownsFixosEsc();
+        guardarProgressoEsc();
+    }
+
+    function voltarSelecaoEsc() {
+        mostrarPassoEsc(1);
+        guardarProgressoEsc();
     }
 
     function atualizarDropdownsFixosEsc() {
         const s1 = document.getElementById('esc-select-fixo-1');
         const s2 = document.getElementById('esc-select-fixo-2');
-        let IDsUsados = duplasFixasManuaisEsc.flatMap(d => [d.p1.id, d.p2.id]);
-        let disp = baseAtletasEsc.filter(a => selecionadosEsc.includes(a.id) && !IDsUsados.includes(a.id));
-        let html = '<option value="">-- Escolha o Jogador --</option>' + disp.map(a => `<option value="${a.id}">${a.nome}</option>`).join('');
+        const IDsUsados = duplasFixasManuaisEsc.flatMap(d => [d.p1.id, d.p2.id]);
+        const disp = baseDadosAtletas.filter(a => selecionadosEsc.includes(a.id) && !IDsUsados.includes(a.id));
+        const html = '<option value="">-- Escolha o Jogador --</option>' +
+            disp.map(a => `<option value="${a.id}">${esc(a.nome)}</option>`).join('');
         s1.innerHTML = html; s2.innerHTML = html;
+    }
+
+    function renderizarFixasEsc() {
+        const div = document.getElementById('esc-lista-duplas-fixas');
+        if (!div) return;
+        div.innerHTML = duplasFixasManuaisEsc.map((d, i) =>
+            `<div style="padding:6px; border-bottom:1px solid #eee; font-weight:bold; color:#4b2c82; display:flex; justify-content:space-between; align-items:center;">
+                <span>⭐ ${esc(d.p1.nome)} / ${esc(d.p2.nome)}</span>
+                <button onclick="removerDuplaFixaEsc(${i})" style="background:none; border:none; color:#d9534f; font-weight:bold; cursor:pointer; font-size:1.1em;">✕</button>
+            </div>`).join('');
     }
 
     function adicionarDuplaFixaEsc() {
         const id1 = parseInt(document.getElementById('esc-select-fixo-1').value);
         const id2 = parseInt(document.getElementById('esc-select-fixo-2').value);
-        if(!id1 || !id2 || id1 === id2) return alert("Selecione dois jogadores diferentes.");
-        duplasFixasManuaisEsc.push({ p1: baseAtletasEsc.find(a => a.id === id1), p2: baseAtletasEsc.find(a => a.id === id2) });
-        document.getElementById('esc-lista-duplas-fixas').innerHTML += `<div style="padding:5px; border-bottom:1px solid #eee; font-weight:bold; color:#4b2c82;">⭐ ${baseAtletasEsc.find(a => a.id === id1).nome} / ${baseAtletasEsc.find(a => a.id === id2).nome}</div>`;
+        if (!id1 || !id2 || id1 === id2) return alert("Selecione dois jogadores diferentes.");
+        duplasFixasManuaisEsc.push({
+            p1: baseDadosAtletas.find(a => a.id === id1),
+            p2: baseDadosAtletas.find(a => a.id === id2)
+        });
+        renderizarFixasEsc();
         atualizarDropdownsFixosEsc();
+        guardarProgressoEsc();
     }
 
+    function removerDuplaFixaEsc(i) {
+        duplasFixasManuaisEsc.splice(i, 1);
+        renderizarFixasEsc();
+        atualizarDropdownsFixosEsc();
+        guardarProgressoEsc();
+    }
+
+    // ---------- Passo 3: sorteio e ronda final ----------
     function gerarSorteioRonda1Esc() {
-        let fixosIds = duplasFixasManuaisEsc.flatMap(d => [d.p1.id, d.p2.id]);
-        let rest = baseAtletasEsc.filter(a => selecionadosEsc.includes(a.id) && !fixosIds.includes(a.id)).sort(() => Math.random() - 0.5);
-        
+        if (selecionadosEsc.length !== 16) return alert("São necessários exatamente 16 jogadores.");
+        const fixosIds = duplasFixasManuaisEsc.flatMap(d => [d.p1.id, d.p2.id]);
+        const rest = baseDadosAtletas.filter(a => selecionadosEsc.includes(a.id) && !fixosIds.includes(a.id))
+                                     .sort(() => Math.random() - 0.5);
+
         duplasFinalEsc = duplasFixasManuaisEsc.map((d, i) => ({ id: String(i), nome: `${d.p1.nome} / ${d.p2.nome}` }));
-        for(let i=0; i<rest.length; i+=2) duplasFinalEsc.push({ id: String(duplasFinalEsc.length), nome: `${rest[i].nome} / ${rest[i+1].nome}` });
-
-        document.getElementById('esc-passo-duplas-fixas').classList.add('escondido');
-        document.getElementById('esc-passo-torneio').classList.remove('escondido');
-
-        // Render Ronda 1 Info
-        let R1 = [...duplasFinalEsc].sort(() => Math.random() - 0.5);
-        const gridR1 = document.getElementById('esc-grid-ronda-1');
-        gridR1.innerHTML = "";
-        for(let c=1; c<=4; c++) {
-            gridR1.innerHTML += `<div class="campo-box-info"><h4>Campo ${c}</h4><strong>${R1[(c-1)*2].nome}</strong><br><b style="color:#d9534f">VS</b><br><strong>${R1[(c-1)*2+1].nome}</strong></div>`;
+        for (let i = 0; i < rest.length; i += 2) {
+            duplasFinalEsc.push({ id: String(duplasFinalEsc.length), nome: `${rest[i].nome} / ${rest[i+1].nome}` });
         }
 
-        // Render Ronda Final Formulário
+        // Sorteio dos confrontos da Ronda 1 (4 campos, 8 duplas)
+        const baralhadas = [...duplasFinalEsc].sort(() => Math.random() - 0.5);
+        ronda1Esc = [];
+        for (let c = 0; c < 4; c++) ronda1Esc.push([baralhadas[c*2].nome, baralhadas[c*2+1].nome]);
+
+        finalEsc = [0,1,2,3].map(() => ({ d1: "", d2: "", r1: 0, r2: 0 }));
+        mostrarPassoEsc(3);
+        renderizarTorneioEsc();
+        guardarProgressoEsc();
+    }
+
+    function renderizarTorneioEsc() {
+        const gridR1 = document.getElementById('esc-grid-ronda-1');
+        gridR1.innerHTML = ronda1Esc.map((par, i) =>
+            `<div class="campo-box-info"><h4>Campo ${i+1}</h4><strong>${esc(par[0])}</strong><br><b style="color:#d9534f">VS</b><br><strong>${esc(par[1])}</strong></div>`).join('');
+
         const gridFinal = document.getElementById('esc-grid-ronda-final');
-        gridFinal.innerHTML = "";
-        for(let c=1; c<=4; c++) {
-            gridFinal.innerHTML += `
-                <div class="campo-box-input">
-                    <h4>CAMPO ${c}</h4>
-                    <select id="esc-f-c${c}-d1" class="sel-final-esc" onchange="syncSelectsEsc()"></select>
-                    <input type="number" id="esc-f-c${c}-r1" value="0" min="0">
-                    <div style="font-weight:bold; color:#6f42c1; margin:2px 0;">VS</div>
-                    <input type="number" id="esc-f-c${c}-r2" value="0" min="0">
-                    <select id="esc-f-c${c}-d2" class="sel-final-esc" onchange="syncSelectsEsc()"></select>
-                </div>`;
+        gridFinal.innerHTML = [1, 2, 3, 4].map(c => `
+            <div class="campo-box-input">
+                <h4>CAMPO ${c}</h4>
+                <select id="esc-f-c${c}-d1" class="sel-final-esc" onchange="syncSelectsEsc()"></select>
+                <input type="number" inputmode="numeric" id="esc-f-c${c}-r1" value="${finalEsc[c-1].r1}" min="0" onchange="guardarProgressoEsc()">
+                <div style="font-weight:bold; color:#6f42c1; margin:2px 0;">VS</div>
+                <input type="number" inputmode="numeric" id="esc-f-c${c}-r2" value="${finalEsc[c-1].r2}" min="0" onchange="guardarProgressoEsc()">
+                <select id="esc-f-c${c}-d2" class="sel-final-esc" onchange="syncSelectsEsc()"></select>
+            </div>`).join('');
+
+        // repõe as duplas escolhidas antes de sincronizar as opções
+        const todas = '<option value="">-- Escolha a Dupla --</option>' +
+            duplasFinalEsc.map(d => `<option value="${d.id}">${esc(d.nome)}</option>`).join('');
+        for (let c = 1; c <= 4; c++) {
+            const s1 = document.getElementById(`esc-f-c${c}-d1`);
+            const s2 = document.getElementById(`esc-f-c${c}-d2`);
+            s1.innerHTML = todas; s2.innerHTML = todas;
+            s1.value = finalEsc[c-1].d1; s2.value = finalEsc[c-1].d2;
         }
         syncSelectsEsc();
     }
 
-    // Mantém os selects sincronizados impedindo duplas duplicadas
+    // Mantém os selects sincronizados impedindo duplas repetidas
     function syncSelectsEsc() {
         const selects = document.querySelectorAll('.sel-final-esc');
         const used = Array.from(selects).map(s => s.value).filter(v => v !== "");
         selects.forEach(s => {
             const val = s.value;
-            s.innerHTML = '<option value="">-- Escolha a Dupla --</option>' + 
-                duplasFinalEsc.map(d => (!used.includes(d.id) || d.id === val) ? `<option value="${d.id}" ${d.id === val ? 'selected' : ''}>${d.nome}</option>` : '').join('');
+            s.innerHTML = '<option value="">-- Escolha a Dupla --</option>' +
+                duplasFinalEsc.filter(d => !used.includes(d.id) || d.id === val)
+                              .map(d => `<option value="${d.id}"${d.id === val ? ' selected' : ''}>${esc(d.nome)}</option>`).join('');
         });
+        guardarProgressoEsc();
     }
 
+    // ---------- Passo 4: classificação ----------
     function finalizarTorneioEsc() {
-        rankingDuplasEsc = []; resultadosPDFEsc = [];
-        for(let c=1; c<=4; c++) {
-            let id1 = document.getElementById(`esc-f-c${c}-d1`).value;
-            let id2 = document.getElementById(`esc-f-c${c}-d2`).value;
-            let r1 = parseInt(document.getElementById(`esc-f-c${c}-r1`).value) || 0;
-            let r2 = parseInt(document.getElementById(`esc-f-c${c}-r2`).value) || 0;
-            if(!id1 || !id2) return alert("Por favor, preencha todas as duplas e resultados da Ronda Final!");
-            
-            let d1 = duplasFinalEsc.find(d => d.id === id1), d2 = duplasFinalEsc.find(d => d.id === id2);
-            if(r1 >= r2) { 
-                rankingDuplasEsc.push(d1); rankingDuplasEsc.push(d2); 
-                if(c===1) vencedorGlobalEsc = d1.nome; 
-                if(c===4) candidoGlobalEsc = d2.nome; 
-            } else { 
-                rankingDuplasEsc.push(d2); rankingDuplasEsc.push(d1); 
-                if(c===1) vencedorGlobalEsc = d2.nome; 
-                if(c===4) candidoGlobalEsc = d1.nome; 
-            }
-            resultadosPDFEsc.push({ c, d1: d1.nome, d2: d2.nome, res: `${r1}-${r2}` });
+        // VALIDAÇÃO COMPLETA ANTES de alterar qualquer estado
+        const jogos = [];
+        for (let c = 1; c <= 4; c++) {
+            const id1 = document.getElementById(`esc-f-c${c}-d1`).value;
+            const id2 = document.getElementById(`esc-f-c${c}-d2`).value;
+            const r1 = parseInt(document.getElementById(`esc-f-c${c}-r1`).value) || 0;
+            const r2 = parseInt(document.getElementById(`esc-f-c${c}-r2`).value) || 0;
+            if (!id1 || !id2) return alert(`Campo ${c}: falta escolher as duas duplas da Ronda Final.`);
+            if (r1 === r2) return alert(`Campo ${c}: empate não permitido — é preciso apurar um vencedor.`);
+            jogos.push({ c, id1, id2, r1, r2 });
         }
 
-        document.getElementById('esc-passo-torneio').classList.add('escondido');
-        document.getElementById('esc-passo-4').classList.remove('escondido');
-        document.getElementById('esc-nome-campeao').innerText = vencedorGlobalEsc;
-        document.getElementById('esc-nome-candido').innerText = candidoGlobalEsc;
-
-        const tbody = document.getElementById('esc-corpo-ranking');
-        tbody.innerHTML = "";
-        let pts = 16;
-        rankingDuplasEsc.forEach((d, i) => {
-            tbody.innerHTML += `<tr><td>${i+1}º</td><td style="text-align:left"><strong>${d.nome}</strong></td><td><strong>${pts}</strong></td></tr>`;
-            pts -= 2;
+        rankingDuplasEsc = []; resultadosPDFEsc = [];
+        jogos.forEach(({ c, id1, id2, r1, r2 }) => {
+            const d1 = duplasFinalEsc.find(d => d.id === id1);
+            const d2 = duplasFinalEsc.find(d => d.id === id2);
+            if (r1 > r2) {
+                rankingDuplasEsc.push(d1, d2);
+                if (c === 1) vencedorGlobalEsc = d1.nome;
+                if (c === 4) candidoGlobalEsc = d2.nome;
+            } else {
+                rankingDuplasEsc.push(d2, d1);
+                if (c === 1) vencedorGlobalEsc = d2.nome;
+                if (c === 4) candidoGlobalEsc = d1.nome;
+            }
+            resultadosPDFEsc.push({ c, d1: d1.nome, d2: d2.nome, res: `${r1}-${r2}` });
         });
+
+        mostrarPassoEsc(4);
+        renderizarRankingEsc();
+        guardarProgressoEsc();
+        window.scrollTo(0, 0);
+    }
+
+    function renderizarRankingEsc() {
+        document.getElementById('esc-nome-campeao').textContent = vencedorGlobalEsc || '-';
+        document.getElementById('esc-nome-candido').textContent = candidoGlobalEsc || '-';
+        document.getElementById('esc-corpo-ranking').innerHTML = rankingDuplasEsc.map((d, i) =>
+            `<tr><td>${i+1}º</td><td style="text-align:left"><strong>${esc(d.nome)}</strong></td><td><strong>${16 - i*2}</strong></td></tr>`).join('');
     }
 
     function gerarPDFEsc() {
-        const { jsPDF } = window.jspdf; 
+        if (!pdfDisponivel()) return;
+        const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         const dataAtual = new Date().toLocaleDateString('pt-PT');
-        
+
         doc.setFontSize(10);
         doc.setTextColor(100);
         doc.text(`Data do Torneio: ${dataAtual}`, 195, 10, { align: 'right' });
 
-        doc.setFontSize(22); 
-        doc.setTextColor(75, 44, 130); 
-        doc.text("RELATÓRIO FINAIS - TORNEIO ESCADA", 15, 20);
-        
-        doc.setFontSize(14); 
+        doc.setFontSize(20);
+        doc.setTextColor(75, 44, 130);
+        doc.text("RELATÓRIO FINAL - TORNEIO ESCADA", 15, 20);
+
+        doc.setFontSize(14);
         doc.setTextColor(0, 0, 0);
         doc.text(`CAMPEÕES: ${vencedorGlobalEsc}`, 15, 30);
         doc.text(`TAÇA CÂNDIDO: ${candidoGlobalEsc}`, 15, 38);
-        
-        doc.autoTable({ 
-            startY: 45, 
-            head: [['Lugar', 'Dupla', 'Pontos Obtidos']], 
-            body: rankingDuplasEsc.map((d, i) => [ `${i+1}º`, d.nome, (16 - (i*2)) ]), 
-            theme: 'grid', 
-            headStyles: { fillColor: [75, 44, 130] } 
-        });
-        
-        doc.text("Confrontos da Ronda Final", 15, doc.lastAutoTable.finalY + 15);
-        doc.autoTable({ 
-            startY: doc.lastAutoTable.finalY + 20, 
-            head: [['Campo', 'Dupla A', 'Resultado', 'Dupla B']], 
-            body: resultadosPDFEsc.map(r => [ `Campo ${r.c}`, r.d1, r.res, r.d2 ]) 
-        });
-        
-        doc.save(`Torneio_Escada_${dataAtual.replace(/\//g, '-')}.pdf`);
 
-        // Executa a nova ligação direta de dados ao Ranking
+        doc.autoTable({
+            startY: 45,
+            head: [['Lugar', 'Dupla', 'Pontos Obtidos']],
+            body: rankingDuplasEsc.map((d, i) => [`${i+1}º`, d.nome, (16 - (i*2))]),
+            theme: 'grid',
+            headStyles: { fillColor: [75, 44, 130] }
+        });
+
+        let y = doc.lastAutoTable.finalY + 15;
+        doc.setFontSize(12);
+        doc.text("Confrontos da Ronda 1", 15, y);
+        doc.autoTable({
+            startY: y + 5,
+            head: [['Campo', 'Dupla A', 'Dupla B']],
+            body: ronda1Esc.map((par, i) => [`Campo ${i+1}`, par[0], par[1]]),
+            headStyles: { fillColor: [120, 120, 120] }
+        });
+
+        y = doc.lastAutoTable.finalY + 15;
+        doc.text("Confrontos da Ronda Final", 15, y);
+        doc.autoTable({
+            startY: y + 5,
+            head: [['Campo', 'Dupla A', 'Resultado', 'Dupla B']],
+            body: resultadosPDFEsc.map(r => [`Campo ${r.c}`, r.d1, r.res, r.d2]),
+            headStyles: { fillColor: [75, 44, 130] }
+        });
+
+        doc.save(`Torneio_Escada_${dataAtual.replace(/\//g, '-')}.pdf`);
         enviarResultadosEscParaORanking();
     }
 
     function enviarResultadosEscParaORanking() {
-        let ptsMapeados = {};
+        const ptsMapeados = {};
         let ptsAtuais = 16;
-        
-        // Mapeia e divide os pontos da dupla para cada jogador individual
-        rankingDuplasEsc.forEach((d) => {
-            let jogadores = d.nome.split(" / ");
-            jogadores.forEach(nomeJogador => {
-                ptsMapeados[nomeJogador.trim()] = ptsAtuais;
-            });
+
+        // Cada jogador da dupla recebe a pontuação da dupla
+        rankingDuplasEsc.forEach(d => {
+            d.nome.split(" / ").forEach(nomeJogador => { ptsMapeados[nomeJogador.trim()] = ptsAtuais; });
             ptsAtuais -= 2;
         });
 
-        // Garante que todos existam na base de dados activa do ranking
         Object.keys(ptsMapeados).forEach(nome => {
-            if (!db.listaAtletas.includes(nome)) {
-                db.listaAtletas.push(nome);
-            }
+            if (!db.listaAtletas.includes(nome)) db.listaAtletas.push(nome);
         });
         db.listaAtletas.sort();
         atualizarLocal();
         renderizarInputs();
 
-        // Limpa inputs antigos
         db.listaAtletas.forEach(nome => {
-            const inputElement = document.getElementById(`p-${nome.replace(/\s+/g,'_')}`);
-            if (inputElement) inputElement.value = 0;
+            const el = document.getElementById(`p-${idAtleta(nome)}`);
+            if (el) el.value = 0;
         });
-
-        // Injeta os pontos individuais gerados pela classificação Escada
         Object.entries(ptsMapeados).forEach(([nome, pts]) => {
-            const inputElement = document.getElementById(`p-${nome.replace(/\s+/g,'_')}`);
-            if (inputElement) {
-                inputElement.value = pts;
-            }
+            const el = document.getElementById(`p-${idAtleta(nome)}`);
+            if (el) el.value = pts;
         });
 
-        // Transiciona e reconfigura o formulário do ranking
         document.getElementById('formato-torneio').value = "Escada";
         alternarVisibilidade('ranking');
-
         setTimeout(() => {
             document.getElementById('lista-inputs').scrollIntoView({ behavior: 'smooth' });
-            alert("Sucesso! As pontuações individuais calculadas a partir do Torneio Escada foram inseridas no formulário do Ranking Geral.");
+            alert("Pontuações do Torneio Escada inseridas no formulário do Ranking Geral. Confirme os valores e clique em «Gravar Resultados do Torneio».");
         }, 300);
     }
 
     function reiniciarTorneioEsc() {
+        if (!confirm("Recomeçar o Torneio Escada? Os dados desta sessão serão apagados.")) return;
         selecionadosEsc = [];
         duplasFixasManuaisEsc = [];
         duplasFinalEsc = [];
+        ronda1Esc = [];
+        finalEsc = [0,1,2,3].map(() => ({ d1: "", d2: "", r1: 0, r2: 0 }));
         rankingDuplasEsc = [];
         resultadosPDFEsc = [];
         vencedorGlobalEsc = "";
         candidoGlobalEsc = "";
-        
-        document.getElementById('esc-passo-4').classList.add('escondido');
-        document.getElementById('esc-passo-torneio').classList.add('escondido');
-        document.getElementById('esc-passo-duplas-fixas').classList.add('escondido');
-        document.getElementById('esc-passo-1').classList.remove('escondido');
-        document.getElementById('esc-txt-contador').innerText = `Selecionados: 0 / 16`;
+        try { localStorage.removeItem(CHAVE_ESCADA); } catch (e) {}
+
+        mostrarPassoEsc(1);
+        document.getElementById('esc-txt-contador').textContent = `Selecionados: 0 / 16`;
         document.getElementById('esc-btn-ir-duplas').disabled = true;
         document.getElementById('esc-lista-duplas-fixas').innerHTML = "";
-        
-        initTorneioEsc();
+        carregarListaEsc();
     }
 
 
@@ -1543,7 +1716,16 @@ document.addEventListener('DOMContentLoaded', recuperarProgresso);
     // =================================================================
     const atletasIniciais = ["António Jorge", "Bruno Carvalho", "Cabral", "Cândido", "Diego Peruano", "Gonçalo Faria", "Gustavo Faria", "Henrique Moreira", "Hernani", "João Moedas Nadal", "Jorge Santos", "Luís Frias", "Manuel Frias", "Miguel Carvalho", "Miguel Cunha", "Moraes", "Norberto Moreira", "Nuno Santo Amaro", "Pedro Barreira", "Pedro Carvalho", "Pedro Marques", "Ricardo Anacleto", "Ricardo Conceição", "Rui Moreira", "Rui Rodrigues", "Sarmento", "Zé Cunha"];
 
-    let db = JSON.parse(localStorage.getItem('padel_master_v4')) || { listaAtletas: atletasIniciais, historico: [] };
+    // ---------- Estado local (fonte de verdade offline) ----------
+    function carregarDbLocal() {
+        try {
+            const guardado = JSON.parse(localStorage.getItem('padel_master_v4'));
+            if (guardado && Array.isArray(guardado.listaAtletas) && Array.isArray(guardado.historico)) return guardado;
+        } catch (e) { console.warn("Ranking guardado inválido:", e); }
+        return { listaAtletas: [...atletasIniciais], historico: [] };
+    }
+
+    let db = carregarDbLocal();
 
     function initRanking() {
         document.getElementById('data-torneio').valueAsDate = new Date();
@@ -1557,7 +1739,8 @@ document.addEventListener('DOMContentLoaded', recuperarProgresso);
 
     function adicionarAtletaRk() {
         const nome = document.getElementById('nome-novo-atleta').value.trim();
-        if (!nome || db.listaAtletas.includes(nome)) return alert("Nome inválido ou atleta já existe.");
+        if (!nome) return alert("Insira um nome válido.");
+        if (db.listaAtletas.some(n => n.toLowerCase() === nome.toLowerCase())) return alert("Esse atleta já existe no ranking.");
         db.listaAtletas.push(nome);
         db.listaAtletas.sort();
         atualizarLocal();
@@ -1569,59 +1752,79 @@ document.addEventListener('DOMContentLoaded', recuperarProgresso);
         const container = document.getElementById('lista-inputs');
         container.innerHTML = db.listaAtletas.map(nome => `
             <div class="card-atleta">
-                <label style="font-size:0.85em">${nome}</label>
-                <input type="number" id="p-${nome.replace(/\s+/g,'_')}" value="0" min="0">
+                <label style="font-size:0.85em">${esc(nome)}</label>
+                <input type="number" inputmode="numeric" id="p-${idAtleta(nome)}" value="0" min="0">
             </div>`).join('');
     }
 
     function salvarSemana() {
         const data = document.getElementById('data-torneio').value;
         const formato = document.getElementById('formato-torneio').value;
-        let pontosSemana = {};
+        if (!data) return alert("Escolha a data do torneio antes de gravar.");
+
+        const pontosSemana = {};
         db.listaAtletas.forEach(nome => {
-            const input = document.getElementById(`p-${nome.replace(/\s+/g,'_')}`);
+            const input = document.getElementById(`p-${idAtleta(nome)}`);
+            if (!input) return;
             const val = parseInt(input.value) || 0;
-            if(val > 0) pontosSemana[nome] = val;
-            input.value = 0;
+            if (val > 0) pontosSemana[nome] = val;
         });
-        if(Object.keys(pontosSemana).length === 0) return alert("Por favor, insira pontos para os jogadores.");
+
+        // A validação acontece ANTES de limpar seja o que for
+        if (Object.keys(pontosSemana).length === 0) return alert("Por favor, insira pontos para os jogadores.");
+        if (db.historico.some(h => h.data === data && h.formato === formato) &&
+            !confirm(`Já existe um torneio «${formato}» gravado em ${data}. Gravar mesmo assim?`)) return;
+
         db.historico.push({ data, formato, pontos: pontosSemana });
         atualizarLocal();
         renderizarRanking();
+
+        db.listaAtletas.forEach(nome => {
+            const input = document.getElementById(`p-${idAtleta(nome)}`);
+            if (input) input.value = 0;
+        });
         alert("Resultados guardados e acumulados no Ranking com sucesso!");
-        window.scrollTo(0, document.getElementById('tabela-ranking').offsetTop);
+        document.getElementById('tabela-ranking').scrollIntoView({ behavior: 'smooth' });
     }
 
     function renderizarRanking() {
-        let ac = {};
+        const ac = {};
         db.historico.forEach(h => {
-            for(let n in h.pontos) {
-                if(!ac[n]) ac[n] = { pts: 0, pres: 0 };
+            for (const n in h.pontos) {
+                if (!ac[n]) ac[n] = { pts: 0, pres: 0 };
                 ac[n].pts += h.pontos[n];
                 ac[n].pres += 1;
             }
         });
-        const ordenado = Object.keys(ac).map(n => ({nome: n, ...ac[n]})).sort((a,b) => b.pts - a.pts);
-        
-        document.getElementById('corpo-ranking').innerHTML = ordenado.map((j, i) => 
-            `<tr class="${i===0?'pos-1':''}"><td>${i+1}º</td><td class="text-left">${j.nome}</td><td><strong>${j.pts}</strong></td><td>${j.pres}</td></tr>`).join('');
+        const ordenado = Object.keys(ac).map(n => ({ nome: n, ...ac[n] }))
+            .sort((a, b) => b.pts - a.pts || b.pres - a.pres || a.nome.localeCompare(b.nome, 'pt'));
 
-        document.getElementById('corpo-historico').innerHTML = db.historico.slice().reverse().map(h => {
-            const classifDia = Object.entries(h.pontos)
-                .sort((a, b) => b[1] - a[1])
-                .map(([nome, pts]) => `${nome}: <b>${pts}</b>`)
-                .join(' | ');
+        document.getElementById('corpo-ranking').innerHTML = ordenado.map((j, i) =>
+            `<tr class="${i === 0 ? 'pos-1' : ''}"><td>${i+1}º</td><td class="text-left">${esc(j.nome)}</td><td><strong>${j.pts}</strong></td><td>${j.pres}</td></tr>`).join('');
 
-            return `<tr><td>${h.data}</td><td><b>${h.formato}</b></td><td class="text-left" style="font-size:0.8em">${classifDia}</td></tr>`;
-        }).join('');
+        document.getElementById('corpo-historico').innerHTML = db.historico.slice()
+            .sort((a, b) => String(b.data).localeCompare(String(a.data)))
+            .map(h => {
+                const classifDia = Object.entries(h.pontos)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([nome, pts]) => `${esc(nome)}: <b>${pts}</b>`)
+                    .join(' | ');
+                return `<tr><td>${esc(h.data)}</td><td><b>${esc(h.formato)}</b></td><td class="text-left" style="font-size:0.8em">${classifDia}</td></tr>`;
+            }).join('');
     }
 
-    function atualizarLocal() { localStorage.setItem('padel_master_v4', JSON.stringify(db)); }
+    // CORRIGIDO: grava SEMPRE localmente e só depois tenta a nuvem.
+    function atualizarLocal() {
+        try { localStorage.setItem('padel_master_v4', JSON.stringify(db)); }
+        catch (e) { console.warn("Falha ao gravar o ranking localmente:", e); }
+        enviarParaNuvem();
+    }
 
     function gerarPDFRk() {
+        if (!pdfDisponivel()) return;
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
-        const dataDoc = new Date().toLocaleDateString();
+        const dataDoc = new Date().toLocaleDateString('pt-PT');
 
         doc.setFontSize(18);
         doc.setTextColor(75, 44, 130);
@@ -1629,13 +1832,13 @@ document.addEventListener('DOMContentLoaded', recuperarProgresso);
         doc.setFontSize(10);
         doc.setTextColor(100);
         doc.text(`Gerado em: ${dataDoc}`, 14, 22);
-        
-        const rowsRanking = Array.from(document.querySelectorAll("#tabela-ranking tbody tr")).map(tr => 
+
+        const rowsRanking = Array.from(document.querySelectorAll("#tabela-ranking tbody tr")).map(tr =>
             Array.from(tr.cells).map(td => td.innerText));
-        
-        doc.autoTable({ 
-            head: [['Pos', 'Jogador', 'Pontos Totais', 'Presenças']], 
-            body: rowsRanking, 
+
+        doc.autoTable({
+            head: [['Pos', 'Jogador', 'Pontos Totais', 'Presenças']],
+            body: rowsRanking,
             startY: 28,
             theme: 'grid',
             headStyles: { fillColor: [75, 44, 130] }
@@ -1648,7 +1851,7 @@ document.addEventListener('DOMContentLoaded', recuperarProgresso);
         doc.setTextColor(75, 44, 130);
         doc.text("Histórico de Torneios", 14, finalY);
 
-        const rowsHist = Array.from(document.querySelectorAll("#tabela-historico tbody tr")).map(tr => 
+        const rowsHist = Array.from(document.querySelectorAll("#tabela-historico tbody tr")).map(tr =>
             Array.from(tr.cells).map(td => td.innerText));
 
         doc.autoTable({
@@ -1664,97 +1867,132 @@ document.addEventListener('DOMContentLoaded', recuperarProgresso);
     }
 
     function exportarBackup() {
-        const blob = new Blob([JSON.stringify(db)], { type: 'application/json' });
+        const pacote = { ranking: db, atletas: baseDadosAtletas, exportado: new Date().toISOString() };
+        const blob = new Blob([JSON.stringify(pacote, null, 2)], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `backup_padel_${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);   // liberta memória
     }
 
     function importarBackup(event) {
+        const ficheiro = event.target.files && event.target.files[0];
+        if (!ficheiro) return;
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
-                const imported = JSON.parse(e.target.result);
-                if(imported.listaAtletas && imported.historico) {
-                    db = imported;
-                    atualizarLocal();
-                    renderizarTudoRk();
-                    alert("Backup restaurado com sucesso!");
+                const imp = JSON.parse(e.target.result);
+                // aceita o formato novo (com atletas) e o antigo (só o ranking)
+                const ranking = imp.ranking || imp;
+                if (!ranking || !Array.isArray(ranking.listaAtletas) || !Array.isArray(ranking.historico)) {
+                    return alert("Erro: ficheiro de backup inválido.");
                 }
-            } catch(e) { alert("Erro: Ficheiro de backup inválido."); }
+                if (!confirm(`Restaurar backup com ${ranking.historico.length} torneio(s)? Os dados atuais serão substituídos.`)) return;
+                db = ranking;
+                if (Array.isArray(imp.atletas) && imp.atletas.length) { baseDadosAtletas = imp.atletas; guardarAtletas(); sincronizarListasAtletas(); }
+                atualizarLocal();
+                renderizarTudoRk();
+                alert("Backup restaurado com sucesso!");
+            } catch (err) { alert("Erro: ficheiro de backup inválido."); }
+            finally { event.target.value = ""; }
         };
-        reader.readAsText(event.target.files[0]);
+        reader.readAsText(ficheiro);
     }
 
-    function limparTudoRk() { if(confirm("CUIDADO: Isto vai apagar todos os pontos e o histórico do Ranking Geral. Confirmar?")) { localStorage.removeItem('padel_master_v4'); location.reload(); } }
+    function limparTudoRk() {
+        if (!confirm("CUIDADO: isto apaga todos os pontos e o histórico do Ranking Geral, inclusive na nuvem. Continuar?")) return;
+        if (!confirm("Confirmação final: esta ação não pode ser desfeita. Fez backup?")) return;
+        db = { listaAtletas: [...atletasIniciais], historico: [] };
+        atualizarLocal();
+        renderizarTudoRk();
+        alert("Ranking Geral reposto.");
+    }
 
     window.onload = function() {
-        carregarLista();
-        recuperarProgresso();
-        initTorneioEsc(); // Inicializa o Torneio Escada
+        carregarLista();          // Mexicano
+        recuperarProgresso();     // Mexicano (única chamada — antes era executada 3x)
+        initTorneioEsc();         // Escada
+        torneioC_carregarEstado();// Liga
         initRanking();
-        // Arranca mostrando por defeito o ecrã do Torneio Mexicano
         alternarVisibilidade('mexicano');
     };
-    // ========================================================
-// CONFIGURAÇÃO DO CONFIG DO FIREBASE (SUBSTITUA COM OS SEUS DADOS)
-// ========================================================
-var firebaseConfig = {
-  apiKey: "AIzaSyD2FEd-2J_Fg-8oM6LQLrBrs6Xantqnzb8",
-  authDomain: "padel-domingos.firebaseapp.com",
-  databaseURL: "https://padel-domingos-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "padel-domingos",
-  storageBucket: "padel-domingos.firebasestorage.app",
-  messagingSenderId: "201955843161",
-  appId: "1:201955843161:web:867dd48a13766231c8e548"
-};
 
-// Inicializar o Firebase de forma segura
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-var database = firebase.database();
-var padelRef = database.ref('dados_padel');
-
-// 1. Substituir a função de gravação antiga
-if (typeof atualizarLocal === 'function') {
-    var funcaoOriginalAtualizarLocal = atualizarLocal;
-    atualizarLocal = function() {
-        if (typeof funcaolOriginalAtualizarLocal === 'function') {
-            funcaoOriginalAtualizarLocal();
-        }
-        // Envia para a nuvem
-        padelRef.set(db).catch(function(error) {
-            console.error("Erro ao gravar no Firebase: ", error);
-        });
+    // =================================================================
+    // SINCRONIZAÇÃO COM O FIREBASE (local primeiro, nuvem depois)
+    // =================================================================
+    var firebaseConfig = {
+        apiKey: "AIzaSyD2FEd-2J_Fg-8oM6LQLrBrs6Xantqnzb8",
+        authDomain: "padel-domingos.firebaseapp.com",
+        databaseURL: "https://padel-domingos-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "padel-domingos",
+        storageBucket: "padel-domingos.firebasestorage.app",
+        messagingSenderId: "201955843161",
+        appId: "1:201955843161:web:867dd48a13766231c8e548"
     };
-}
 
-// 2. Ouvir a Nuvem em tempo real (CORRIGIDO: Atualiza logo ao abrir a página)
-padelRef.on('value', function(snapshot) {
-    var dadosOnline = snapshot.val();
-    if (dadosOnline) {
-        db = dadosOnline;
-        
-        // Dá uma fração de segundo para garantir que a página carregou e força o redesenho de tudo
-        setTimeout(function() {
-            if (typeof renderizarTudoRk === 'function') renderizarTudoRk();
-            if (typeof renderizarTudoMex === 'function') renderizarTudoMex();
-            if (typeof renderizarEscada === 'function') renderizarEscada();
-            if (typeof renderizarLiga === 'function') renderizarLiga();
-            if (typeof carregarLista === 'function') carregarLista();
-        }, 200);
-    } else {
-        // Se a nuvem estiver vazia, envia os dados atuais para lá
-        if (db && (db.listaAtletas || db.historico)) {
-            padelRef.set(db);
-        }
+    var padelRef = null;
+
+    function estadoSync(texto, classe) {
+        const el = document.getElementById('estado-sync');
+        if (el) { el.textContent = texto; el.className = 'estado-sync ' + (classe || ''); }
     }
-}, function(error) {
-    console.error("Erro de leitura do Firebase: ", error);
-});
+
+    function enviarParaNuvem() {
+        if (!padelRef) return;
+        padelRef.set(db).catch(function (erro) {
+            console.error("Erro ao gravar no Firebase:", erro);
+            estadoSync("⚠ Guardado só neste dispositivo", "off");
+        });
+    }
+
+    // Funde nuvem + local em vez de deixar a nuvem sobrepor-se cegamente
+    function fundirDados(local, nuvem) {
+        const chave = h => `${h.data}|${h.formato}|${Object.keys(h.pontos || {}).sort().join(',')}`;
+        const mapa = new Map();
+        (nuvem.historico || []).forEach(h => mapa.set(chave(h), h));
+        (local.historico || []).forEach(h => { if (!mapa.has(chave(h))) mapa.set(chave(h), h); });
+        return {
+            listaAtletas: [...new Set([...(nuvem.listaAtletas || []), ...(local.listaAtletas || [])])].sort(),
+            historico: [...mapa.values()].sort((a, b) => String(a.data).localeCompare(String(b.data)))
+        };
+    }
+
+    try {
+        if (typeof firebase === 'undefined') throw new Error("SDK do Firebase não carregou");
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        var database = firebase.database();
+        padelRef = database.ref('dados_padel');
+
+        database.ref('.info/connected').on('value', function (snap) {
+            if (snap.val() === true) estadoSync("☁ Sincronizado com a nuvem", "ok");
+            else estadoSync("⚠ Offline — a gravar só neste dispositivo", "off");
+        });
+
+        padelRef.on('value', function (snapshot) {
+            const nuvem = snapshot.val();
+            if (nuvem && (Array.isArray(nuvem.listaAtletas) || Array.isArray(nuvem.historico))) {
+                const fundido = fundirDados(db, nuvem);
+                const mudouLocal = JSON.stringify(fundido) !== JSON.stringify(db);
+                const mudouNuvem = JSON.stringify(fundido) !== JSON.stringify(nuvem);
+                db = fundido;
+                try { localStorage.setItem('padel_master_v4', JSON.stringify(db)); } catch (e) {}
+                if (mudouLocal && typeof renderizarTudoRk === 'function') renderizarTudoRk();
+                if (mudouNuvem) enviarParaNuvem();   // devolve à nuvem o que só existia localmente
+            } else {
+                enviarParaNuvem();                   // nuvem vazia: envia o que temos
+            }
+        }, function (erro) {
+            console.error("Erro de leitura do Firebase:", erro);
+            estadoSync("⚠ Sem ligação à nuvem — dados guardados localmente", "off");
+        });
+    } catch (e) {
+        console.error("Firebase indisponível:", e);
+        estadoSync("⚠ Sem ligação à nuvem — dados guardados localmente", "off");
+    }
 </script>
 </body>
 </html>
