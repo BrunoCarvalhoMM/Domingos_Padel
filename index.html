@@ -1351,12 +1351,19 @@
     // Critério único de ordenação do Mexicano: pontos e, em caso de empate, jogador mais velho.
     // O sorteio inicial (ordemInicial) fica como último recurso para garantir uma ordem estável.
     function compararMexicano(a, b) {
-        if (b.total !== a.total) return b.total - a.total;
-        const ta = Number.isFinite(a.timeBirth) ? a.timeBirth : Infinity;
-        const tb = Number.isFinite(b.timeBirth) ? b.timeBirth : Infinity;
-        if (ta !== tb) return ta - tb;                  // data menor = mais velho = melhor posição
-        return (a.ordemInicial || 0) - (b.ordemInicial || 0);
-    }
+    if (b.total !== a.total) return b.total - a.total;
+
+    // Antes de existir qualquer ronda registada, todos têm total = 0.
+    // Nesse caso não faz sentido desempatar por idade: mantém a ordem do sorteio original.
+    if (rAtual <= 1) return (a.ordemInicial || 0) - (b.ordemInicial || 0);
+
+    const ta = Number.isFinite(a.timeBirth) ? a.timeBirth : Infinity;
+    const tb = Number.isFinite(b.timeBirth) ? b.timeBirth : Infinity;
+    if (ta !== tb) return ta - tb;                  // data menor = mais velho = melhor posição
+    return (a.ordemInicial || 0) - (b.ordemInicial || 0);
+	}
+	
+	
 
     function processarRonda() {
     for (let i = 0; i < 4; i++) {
