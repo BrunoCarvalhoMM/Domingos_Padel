@@ -1353,15 +1353,21 @@
     function compararMexicano(a, b) {
     if (b.total !== a.total) return b.total - a.total;
 
-    // Antes de existir qualquer ronda registada, todos têm total = 0.
-    // Nesse caso não faz sentido desempatar por idade: mantém a ordem do sorteio original.
-    if (rAtual <= 1) return (a.ordemInicial || 0) - (b.ordemInicial || 0);
+    // Enquanto NINGUÉM tiver pontos, ainda não há resultados registados
+    // (início do torneio, ou depois de corrigir/apagar a 1ª ronda):
+    // mantém a ordem do sorteio original.
+    const semResultados = atletasTorneio.every(at => at.total === 0);
+    if (semResultados) {
+        return (a.ordemInicial || 0) - (b.ordemInicial || 0);
+    }
 
+    // Assim que existir qualquer resultado (mesmo ainda na 1ª ronda),
+    // o desempate volta a ser sempre: pontos -> data de nascimento -> sorteio.
     const ta = Number.isFinite(a.timeBirth) ? a.timeBirth : Infinity;
     const tb = Number.isFinite(b.timeBirth) ? b.timeBirth : Infinity;
-    if (ta !== tb) return ta - tb;                  // data menor = mais velho = melhor posição
+    if (ta !== tb) return ta - tb;
     return (a.ordemInicial || 0) - (b.ordemInicial || 0);
-	}
+}
 	
 	
 
