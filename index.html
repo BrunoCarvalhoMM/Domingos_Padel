@@ -599,6 +599,7 @@
 
     let torneioC_selecionados = []; let torneioC_duplasFixadas = []; let torneioC_duplas = []; let torneioC_rAtual = 1; let torneioC_fase = "GRUPOS";
     let torneioC_resultadosMeias = []; let torneioC_resultadosFinais = []; let torneioC_rankingDuplas = [];
+
     function torneioC_salvarEstado() {
         const dados = {
             selecionados: torneioC_selecionados, duplasFixadas: torneioC_duplasFixadas,
@@ -1206,7 +1207,8 @@
 		{ id: 49, nome: "Mário Leandro", data: "1970-11-08" }, { id: 50, nome: "Fernando Monteiro", data: "1960-03-15" }
     ];
 
-    // --- Persistência da base de atletas (partilhada pelos 3 torneios) ---    const CHAVE_ATLETAS = 'padel_atletas_v1';
+    // --- Persistência da base de atletas (partilhada pelos 3 torneios) ---
+    const CHAVE_ATLETAS = 'padel_atletas_v1';
     function guardarAtletas() {
         try { localStorage.setItem(CHAVE_ATLETAS, JSON.stringify(baseDadosAtletas)); }
         catch (e) { console.warn("Falha ao gravar a lista de atletas:", e); }
@@ -1806,6 +1808,7 @@
         guardarProgressoEsc();
         window.scrollTo(0, 0);
     }
+
     function renderizarRankingEsc() {
         document.getElementById('esc-nome-campeao').textContent = vencedorGlobalEsc || '-';
         document.getElementById('esc-nome-candido').textContent = candidoGlobalEsc || '-';
