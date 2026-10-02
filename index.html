@@ -233,8 +233,8 @@
   <form class="acesso-cartao" onsubmit="event.preventDefault(); entrarNoFirebase();">
     <h2 id="titulo-acesso">Padel Domingos</h2>
     <p>Inicia sessão para aceder aos torneios e ao ranking.</p>
-    <label for="acesso-email">Utilizador (email)</label>
-    <input id="acesso-email" type="email" autocomplete="username" required>
+    <label for="acesso-utilizador">Nome de utilizador</label>
+    <input id="acesso-utilizador" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="3" maxlength="32" pattern="[A-Za-z0-9_-]{3,32}" title="Use 3 a 32 letras, números, hífen ou underscore." required>
     <label for="acesso-password">Palavra-passe</label>
     <input id="acesso-password" type="password" autocomplete="current-password" required>
     <button id="btn-entrar" type="submit">Entrar</button>
@@ -2179,8 +2179,10 @@
 
     function entrarNoFirebase() {
         if (!auth) return mostrarErroAcesso("O serviço de autenticação não está disponível. Tenta novamente quando estiveres online.");
-        const email = document.getElementById('acesso-email').value.trim();
+        const username = document.getElementById('acesso-utilizador').value.trim().toLowerCase();
         const password = document.getElementById('acesso-password').value;
+        if (!/^[a-z0-9_-]{3,32}$/.test(username)) return mostrarErroAcesso("Usa 3 a 32 letras, números, hífen ou underscore.");
+        const email = username + "@padel-domingos.firebaseapp.com";
         const botao = document.getElementById('btn-entrar');
         botao.disabled = true;
         mostrarErroAcesso("");
