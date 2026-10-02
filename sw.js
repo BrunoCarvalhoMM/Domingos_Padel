@@ -1,7 +1,7 @@
-const CACHE_VERSION = 'padel-v2';
+const CACHE_VERSION = 'padel-v3';
 const APP_CACHE = CACHE_VERSION + '-app';
 const LIB_CACHE = CACHE_VERSION + '-libraries';
-const APP_FILES = ['./', './index.html', './manifest.json', './icon-192.svg', './icon-512.svg'];
+const APP_FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 const LIBRARIES = [
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js',
