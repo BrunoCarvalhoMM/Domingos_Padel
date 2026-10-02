@@ -6,7 +6,8 @@ const LIBRARIES = [
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js',
   'https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js',
-  'https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js'
+  'https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js',
+  'https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js'
 ];
 
 self.addEventListener('install', event => {
