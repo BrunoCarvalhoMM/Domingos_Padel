@@ -256,6 +256,7 @@
   </svg>
   Ranking Geral
 </button>
+          <button id="btn-nav-historico" class="btn-menu" aria-label="Abrir histórico dos torneios" onclick="abrirHistorico()">📜 Histórico</button>
           <button id="btn-nav-continuar" class="btn-menu escondido" style="background:#b45309; border-color:#fbbf24;" onclick="alternarVisibilidade(this.dataset.alvo)"></button>
         </div>
         <div id="estado-sync" class="estado-sync">Sincronização: a ligar…</div>
@@ -1101,7 +1102,7 @@
             <tbody id="corpo-ranking"></tbody>
         </table>
 
-        <div style="margin-top: 40px; border-top: 2px solid #ddd; padding-top: 20px;">
+        <div id="secao-historico" style="margin-top: 40px; border-top: 2px solid #ddd; padding-top: 20px; scroll-margin-top: 20px;">
             <h2>📜 Histórico de Torneios (Ordenado por Classificação do Dia)</h2>
             <table id="tabela-historico" class="ranking-table">
                 <thead><tr><th width="15%">Data</th><th width="15%">Formato</th><th>Classificação do Dia (Jogador: Pontos)</th></tr></thead>
@@ -1115,6 +1116,14 @@
 
 <script>
     // --- LÓGICA DE NAVEGAÇÃO ENTRE MÓDULOS ---
+    function abrirHistorico() {
+        alternarVisibilidade('ranking');
+        document.getElementById('btn-nav-ranking').classList.remove('ativo');
+        document.getElementById('btn-nav-historico').classList.add('ativo');
+        const secao = document.getElementById('secao-historico');
+        if (secao) secao.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     function alternarVisibilidade(idModulo) {
         document.getElementById('modulo-selecao').classList.add('escondido');
         document.getElementById('modulo-mexicano').classList.add('escondido');
@@ -1124,6 +1133,7 @@
 
         document.getElementById('btn-nav-selecao').classList.remove('ativo');
         document.getElementById('btn-nav-ranking').classList.remove('ativo');
+        document.getElementById('btn-nav-historico').classList.remove('ativo');
         document.getElementById('btn-nav-continuar').classList.remove('ativo');
 
         if (idModulo === 'selecao') {
