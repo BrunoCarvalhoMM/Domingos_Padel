@@ -146,7 +146,19 @@
         @media (max-width: 420px) {
             .grid-jogadores { grid-template-columns: 1fr; }
         }
-    </style>
+    
+        .acesso-firebase { position: fixed; inset: 0; z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 23, 42, .96); }
+        .acesso-firebase[hidden] { display: none; }
+        .acesso-cartao { width: min(100%, 390px); box-sizing: border-box; padding: 24px; border-radius: 14px; background: #fff; box-shadow: 0 16px 48px rgba(0,0,0,.35); }
+        .acesso-cartao h2 { margin: 0 0 8px; color: #1e293b; }
+        .acesso-cartao p { color: #475569; }
+        .acesso-cartao label { display: block; margin: 14px 0 5px; font-weight: 600; }
+        .acesso-cartao input { box-sizing: border-box; width: 100%; padding: 11px; border: 1px solid #94a3b8; border-radius: 6px; font-size: 16px; }
+        .acesso-cartao button, #btn-sair { border: 0; border-radius: 6px; padding: 10px 14px; background: #1e293b; color: #fff; font-weight: 700; cursor: pointer; }
+        .acesso-cartao button { width: 100%; margin-top: 18px; }
+        #estado-acesso { min-height: 1.4em; color: #b91c1c; }
+        #btn-sair { margin: 6px 0 0 8px; font-size: .8em; }
+</style>
     <style>
     #torneio-c-root { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 10px; color: #333; }
     #torneio-c-root .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-bottom: 20px; }
@@ -208,6 +220,7 @@
 </style>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" href="./icon-192.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="./icon-192.svg">
@@ -216,6 +229,19 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
+<div id="acesso-firebase" class="acesso-firebase" role="dialog" aria-modal="true" aria-labelledby="titulo-acesso">
+  <form class="acesso-cartao" onsubmit="event.preventDefault(); entrarNoFirebase();">
+    <h2 id="titulo-acesso">Padel Domingos</h2>
+    <p>Inicia sessão para aceder aos torneios e ao ranking.</p>
+    <label for="acesso-email">Utilizador (email)</label>
+    <input id="acesso-email" type="email" autocomplete="username" required>
+    <label for="acesso-password">Palavra-passe</label>
+    <input id="acesso-password" type="password" autocomplete="current-password" required>
+    <button id="btn-entrar" type="submit">Entrar</button>
+    <p id="estado-acesso" role="status" aria-live="polite"></p>
+  </form>
+</div>
+
 
 <div class="container-geral">
 
@@ -237,6 +263,7 @@
           <button id="btn-nav-continuar" class="btn-menu escondido" style="background:#b45309; border-color:#fbbf24;" onclick="alternarVisibilidade(this.dataset.alvo)"></button>
         </div>
         <div id="estado-sync" class="estado-sync">Sincronização: a ligar…</div>
+        <button id="btn-sair" type="button" onclick="sairDoFirebase()">Sair</button>
     </div>
 
     <div id="modulo-selecao">
@@ -2142,17 +2169,43 @@
         };
     }
 
-    try {
-        if (typeof firebase === 'undefined') throw new Error("SDK do Firebase não carregou");
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        var database = firebase.database();
-        padelRef = database.ref('dados_padel');
+    var auth = null;
+    var database = null;
 
+    function mostrarErroAcesso(texto) {
+        const el = document.getElementById('estado-acesso');
+        if (el) el.textContent = texto;
+    }
+
+    function entrarNoFirebase() {
+        if (!auth) return mostrarErroAcesso("O serviço de autenticação não está disponível. Tenta novamente quando estiveres online.");
+        const email = document.getElementById('acesso-email').value.trim();
+        const password = document.getElementById('acesso-password').value;
+        const botao = document.getElementById('btn-entrar');
+        botao.disabled = true;
+        mostrarErroAcesso("");
+        auth.signInWithEmailAndPassword(email, password)
+            .catch(function (erro) {
+                console.error("Falha no início de sessão:", erro);
+                mostrarErroAcesso("Não foi possível iniciar sessão. Confirma os dados e a ligação à internet.");
+            })
+            .finally(function () { botao.disabled = false; });
+    }
+
+    function sairDoFirebase() {
+        if (auth) auth.signOut().catch(function (erro) {
+            console.error("Falha ao terminar sessão:", erro);
+            estadoSync("⚠ Não foi possível terminar a sessão", "off");
+        });
+    }
+
+    function iniciarSincronizacaoAutenticada() {
+        database = firebase.database();
+        padelRef = database.ref('dados_padel');
         database.ref('.info/connected').on('value', function (snap) {
             if (snap.val() === true) estadoSync("☁ Sincronizado com a nuvem", "ok");
             else estadoSync("⚠ Offline — a gravar só neste dispositivo", "off");
         });
-
         padelRef.on('value', function (snapshot) {
             const nuvem = snapshot.val();
             if (nuvem && (Array.isArray(nuvem.listaAtletas) || Array.isArray(nuvem.historico))) {
@@ -2162,17 +2215,39 @@
                 db = fundido;
                 try { localStorage.setItem('padel_master_v4', JSON.stringify(db)); } catch (e) {}
                 if (mudouLocal && typeof renderizarTudoRk === 'function') renderizarTudoRk();
-                if (mudouNuvem) enviarParaNuvem();   // devolve à nuvem o que só existia localmente
+                if (mudouNuvem) enviarParaNuvem();
             } else {
-                enviarParaNuvem();                   // nuvem vazia: envia o que temos
+                enviarParaNuvem();
             }
         }, function (erro) {
             console.error("Erro de leitura do Firebase:", erro);
             estadoSync("⚠ Sem ligação à nuvem — dados guardados localmente", "off");
         });
+    }
+
+    try {
+        if (typeof firebase === 'undefined') throw new Error("SDK do Firebase não carregou");
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        auth.onAuthStateChanged(function (user) {
+            const gate = document.getElementById('acesso-firebase');
+            if (!user) {
+                if (database) database.ref('dados_padel').off();
+                database = null;
+                padelRef = null;
+                if (gate) gate.hidden = false;
+                estadoSync("Inicia sessão para sincronizar com a nuvem", "off");
+                return;
+            }
+            if (gate) gate.hidden = true;
+            if (!database) iniciarSincronizacaoAutenticada();
+        }, function (erro) {
+            console.error("Erro ao verificar sessão Firebase:", erro);
+            mostrarErroAcesso("Não foi possível verificar a sessão. Confirma a ligação à internet.");
+        });
     } catch (e) {
         console.error("Firebase indisponível:", e);
-        estadoSync("⚠ Sem ligação à nuvem — dados guardados localmente", "off");
+        mostrarErroAcesso("O Firebase não está disponível. Tenta novamente quando estiveres online.");
     }
 </script>
 
