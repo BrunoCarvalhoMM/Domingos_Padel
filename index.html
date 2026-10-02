@@ -256,6 +256,7 @@
   </svg>
   Ranking Geral
 </button>
+          <button id="btn-nav-historico" class="btn-menu" aria-label="Abrir histórico dos torneios" onclick="abrirHistorico()">📜 Histórico</button>
           <button id="btn-nav-continuar" class="btn-menu escondido" style="background:#b45309; border-color:#fbbf24;" onclick="alternarVisibilidade(this.dataset.alvo)"></button>
         </div>
         <div id="estado-sync" class="estado-sync">Sincronização: a ligar…</div>
@@ -598,7 +599,6 @@
 
     let torneioC_selecionados = []; let torneioC_duplasFixadas = []; let torneioC_duplas = []; let torneioC_rAtual = 1; let torneioC_fase = "GRUPOS";
     let torneioC_resultadosMeias = []; let torneioC_resultadosFinais = []; let torneioC_rankingDuplas = [];
-
     function torneioC_salvarEstado() {
         const dados = {
             selecionados: torneioC_selecionados, duplasFixadas: torneioC_duplasFixadas,
@@ -1101,7 +1101,7 @@
             <tbody id="corpo-ranking"></tbody>
         </table>
 
-        <div style="margin-top: 40px; border-top: 2px solid #ddd; padding-top: 20px;">
+        <div id="secao-historico" style="margin-top: 40px; border-top: 2px solid #ddd; padding-top: 20px; scroll-margin-top: 20px;">
             <h2>📜 Histórico de Torneios (Ordenado por Classificação do Dia)</h2>
             <table id="tabela-historico" class="ranking-table">
                 <thead><tr><th width="15%">Data</th><th width="15%">Formato</th><th>Classificação do Dia (Jogador: Pontos)</th></tr></thead>
@@ -1115,6 +1115,14 @@
 
 <script>
     // --- LÓGICA DE NAVEGAÇÃO ENTRE MÓDULOS ---
+    function abrirHistorico() {
+        alternarVisibilidade('ranking');
+        document.getElementById('btn-nav-ranking').classList.remove('ativo');
+        document.getElementById('btn-nav-historico').classList.add('ativo');
+        const secao = document.getElementById('secao-historico');
+        if (secao) secao.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     function alternarVisibilidade(idModulo) {
         document.getElementById('modulo-selecao').classList.add('escondido');
         document.getElementById('modulo-mexicano').classList.add('escondido');
@@ -1124,6 +1132,7 @@
 
         document.getElementById('btn-nav-selecao').classList.remove('ativo');
         document.getElementById('btn-nav-ranking').classList.remove('ativo');
+        document.getElementById('btn-nav-historico').classList.remove('ativo');
         document.getElementById('btn-nav-continuar').classList.remove('ativo');
 
         if (idModulo === 'selecao') {
@@ -1197,8 +1206,7 @@
 		{ id: 49, nome: "Mário Leandro", data: "1970-11-08" }, { id: 50, nome: "Fernando Monteiro", data: "1960-03-15" }
     ];
 
-    // --- Persistência da base de atletas (partilhada pelos 3 torneios) ---
-    const CHAVE_ATLETAS = 'padel_atletas_v1';
+    // --- Persistência da base de atletas (partilhada pelos 3 torneios) ---    const CHAVE_ATLETAS = 'padel_atletas_v1';
     function guardarAtletas() {
         try { localStorage.setItem(CHAVE_ATLETAS, JSON.stringify(baseDadosAtletas)); }
         catch (e) { console.warn("Falha ao gravar a lista de atletas:", e); }
@@ -1798,7 +1806,6 @@
         guardarProgressoEsc();
         window.scrollTo(0, 0);
     }
-
     function renderizarRankingEsc() {
         document.getElementById('esc-nome-campeao').textContent = vencedorGlobalEsc || '-';
         document.getElementById('esc-nome-candido').textContent = candidoGlobalEsc || '-';
