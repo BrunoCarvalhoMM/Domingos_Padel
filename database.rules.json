@@ -1,0 +1,6 @@
+{
+  "rules": {
+    ".read": "auth != null && auth.token.email == 'padeleirossad@padel-domingos.firebaseapp.com'",
+    ".write": "auth != null && auth.token.email == 'padeleirossad@padel-domingos.firebaseapp.com'"
+  }
+}
