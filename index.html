@@ -230,14 +230,10 @@
 </head>
 <body>
 <div id="acesso-firebase" class="acesso-firebase" role="dialog" aria-modal="true" aria-labelledby="titulo-acesso">
-  <form class="acesso-cartao" onsubmit="event.preventDefault(); entrarNoFirebase();">
+  <form class="acesso-cartao" onsubmit="event.preventDefault(); entrarComGoogle();">
     <h2 id="titulo-acesso">Padel Domingos</h2>
-    <p>Inicia sessão para aceder aos torneios e ao ranking.</p>
-    <label for="acesso-utilizador">Nome de utilizador</label>
-    <input id="acesso-utilizador" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" minlength="3" maxlength="32" pattern="[A-Za-z0-9_-]{3,32}" title="Use 3 a 32 letras, números, hífen ou underscore." required>
-    <label for="acesso-password">Palavra-passe</label>
-    <input id="acesso-password" type="password" autocomplete="current-password" required>
-    <button id="btn-entrar" type="submit">Entrar</button>
+    <p>Inicia sessão com a tua conta Google para aceder aos torneios e ao ranking.</p>
+    <button id="btn-entrar" type="submit">Entrar com Google</button>
     <p id="estado-acesso" role="status" aria-live="polite"></p>
   </form>
 </div>
@@ -2177,21 +2173,14 @@
         if (el) el.textContent = texto;
     }
 
-    function entrarNoFirebase() {
+    function entrarComGoogle() {
         if (!auth) return mostrarErroAcesso("O serviço de autenticação não está disponível. Tenta novamente quando estiveres online.");
-        const username = document.getElementById('acesso-utilizador').value.trim().toLowerCase();
-        const password = document.getElementById('acesso-password').value;
-        if (!/^[a-z0-9_-]{3,32}$/.test(username)) return mostrarErroAcesso("Usa 3 a 32 letras, números, hífen ou underscore.");
-        const email = username + "@padel-domingos.firebaseapp.com";
-        const botao = document.getElementById('btn-entrar');
-        botao.disabled = true;
         mostrarErroAcesso("");
-        auth.signInWithEmailAndPassword(email, password)
-            .catch(function (erro) {
-                console.error("Falha no início de sessão:", erro);
-                mostrarErroAcesso("Não foi possível iniciar sessão. Confirma os dados e a ligação à internet.");
-            })
-            .finally(function () { botao.disabled = false; });
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithRedirect(provider).catch(function (erro) {
+            console.error("Falha no início de sessão Google:", erro);
+            mostrarErroAcesso("Não foi possível iniciar sessão com Google. Tenta novamente.");
+        });
     }
 
     function sairDoFirebase() {
