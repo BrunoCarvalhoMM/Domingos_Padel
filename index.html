@@ -2177,9 +2177,16 @@
         if (!auth) return mostrarErroAcesso("O serviço de autenticação não está disponível. Tenta novamente quando estiveres online.");
         mostrarErroAcesso("");
         const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithRedirect(provider).catch(function (erro) {
+        provider.setCustomParameters({ prompt: "select_account" });
+        auth.signInWithPopup(provider).catch(function (erro) {
             console.error("Falha no início de sessão Google:", erro);
-            mostrarErroAcesso("Não foi possível iniciar sessão com Google. Tenta novamente.");
+            if (erro.code === "auth/popup-blocked") {
+                mostrarErroAcesso("O navegador bloqueou a janela Google. Permite pop-ups e tenta novamente.");
+            } else if (erro.code === "auth/unauthorized-domain") {
+                mostrarErroAcesso("Este domínio ainda não está autorizado no Firebase Authentication.");
+            } else {
+                mostrarErroAcesso("Não foi possível iniciar sessão com Google. Tenta novamente.");
+            }
         });
     }
 
