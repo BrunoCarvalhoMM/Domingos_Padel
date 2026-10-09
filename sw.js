@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'padel-v4';
+const CACHE_VERSION = 'padel-v5';
 const APP_CACHE = CACHE_VERSION + '-app';
 const LIB_CACHE = CACHE_VERSION + '-libraries';
 const APP_FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
