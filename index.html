@@ -1175,6 +1175,7 @@
     function guardarAtletas() {
         try { localStorage.setItem(CHAVE_ATLETAS, JSON.stringify(baseDadosAtletas)); }
         catch (e) { console.warn("Falha ao gravar a lista de atletas:", e); }
+        enviarAtletasParaNuvem();
     }
     function carregarAtletas() {
         try {
@@ -2112,10 +2113,30 @@
     };
 
     var padelRef = null;
+    var atletasRef = null;
 
     function estadoSync(texto, classe) {
         const el = document.getElementById('estado-sync');
         if (el) { el.textContent = texto; el.className = 'estado-sync ' + (classe || ''); }
+    }
+
+    function enviarAtletasParaNuvem() {
+        if (!atletasRef) return;
+        atletasRef.set(baseDadosAtletas).catch(function (erro) {
+            console.error("Erro ao gravar a base de atletas no Firebase:", erro);
+            estadoSync("⚠ Atletas guardados só neste dispositivo", "off");
+        });
+    }
+
+    function fundirAtletas(local, nuvem) {
+        const porNome = new Map();
+        (local || []).forEach(at => {
+            if (at && at.nome) porNome.set(at.nome.trim().toLocaleLowerCase('pt'), at);
+        });
+        (nuvem || []).forEach(at => {
+            if (at && at.nome) porNome.set(at.nome.trim().toLocaleLowerCase('pt'), at);
+        });
+        return [...porNome.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt'));
     }
 
     function enviarParaNuvem() {
@@ -2143,6 +2164,26 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         var database = firebase.database();
         padelRef = database.ref('dados_padel');
+        atletasRef = database.ref('base_atletas');
+
+        atletasRef.on('value', function (snapshot) {
+            const nuvem = snapshot.val();
+            if (!nuvem) {
+                enviarAtletasParaNuvem();
+                return;
+            }
+            const listaNuvem = Array.isArray(nuvem) ? nuvem : Object.values(nuvem);
+            const fundida = fundirAtletas(baseDadosAtletas, listaNuvem);
+            const mudouLocal = JSON.stringify(fundida) !== JSON.stringify(baseDadosAtletas);
+            const mudouNuvem = JSON.stringify(fundida) !== JSON.stringify(listaNuvem);
+            baseDadosAtletas = fundida;
+            try { localStorage.setItem(CHAVE_ATLETAS, JSON.stringify(baseDadosAtletas)); } catch (e) {}
+            if (mudouLocal) sincronizarListasAtletas();
+            if (mudouNuvem) enviarAtletasParaNuvem();
+        }, function (erro) {
+            console.error("Erro ao sincronizar a base de atletas:", erro);
+            estadoSync("⚠ Lista de atletas sem sincronização", "off");
+        });
 
         database.ref('.info/connected').on('value', function (snap) {
             if (snap.val() === true) estadoSync("☁ Sincronizado com a nuvem", "ok");
